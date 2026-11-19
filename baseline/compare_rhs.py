@@ -18,6 +18,13 @@ reference check at the end of each stage.
 States: points on the stored ``bird_study1`` and ``bird_main`` limit cycles
 plus perturbed off-cycle states, for A_s,x = 42 and 44 deg.
 
+Parameter variants (``VARIANTS``): besides the defaults, non-default wing
+position and an open tail. Upstream can only see such values through its
+module-level ``SimulationsSettings`` instances (and the Reynolds number
+computed at import), so they are patched there; the package receives them as
+``BirdModel`` attributes. Equality shows that the explicit parameters mean
+exactly what the hidden settings meant.
+
 Usage (from the repository root)::
 
     python baseline/compare_rhs.py            # exit status 1 if not identical
@@ -50,6 +57,32 @@ def joints(Joint, Shoulder, Elbow, Wrist, amp_deg):
         wrist=Wrist(axis_y=Joint(-np.pi / 6, np.pi / 6, np.pi / 2),
                     axis_z=Joint(0., 0., 0.)),
     )
+
+
+VARIANTS = {
+    "defaults": {},
+    "wing_position": dict(wingframe_position=np.array([0., 0., -0.08])),
+    "open_tail": dict(tail_opening=np.deg2rad(40), tail_length=0.3,
+                      wingframe_position_tail=np.array([0., 0., 0.35])),
+}
+
+
+def apply_upstream_variant(params):
+    """Set upstream's hidden settings (two instances + import-time Reynolds)."""
+    import aero_package.flapping_forces as ff
+    import aero_package.TailModels as tm
+    from aero_package.settings import SimulationsSettings
+    for inst in (ff.settings, tm.settings):
+        inst.__dict__.update(SimulationsSettings().__dict__)
+        for k, v in params.items():
+            setattr(inst, k, v)
+    tm.Reynolds = float(15*tm.settings.tail_length/tm.kin_viscosity)
+
+
+def apply_package_variant(birds, params):
+    for b in birds.values():
+        for k, v in params.items():
+            setattr(b, k, v)
 
 
 def upstream_birds(upstream_dir):
@@ -102,28 +135,34 @@ def main(argv=None):
     p.add_argument("--rtol", type=float, default=0.0,
                    help="relative tolerance (default 0: bitwise)")
     p.add_argument("--points", type=int, default=8, help="points per cycle")
+    p.add_argument("--variants", nargs="+", default=list(VARIANTS),
+                   choices=list(VARIANTS))
     args = p.parse_args(argv)
 
     pts = sample_points(args.points)
+    ok = True
     with tempfile.TemporaryDirectory() as tmp:
         archive = subprocess.run(["git", "archive", UPSTREAM_TAG, "multiflap"],
                                  cwd=REPO, capture_output=True, check=True).stdout
         subprocess.run(["tar", "-x", "-C", tmp], input=archive, check=True)
-        ref = evaluate(upstream_birds(Path(tmp)), pts)
-    cand = evaluate(package_birds(), pts)
-
-    ok = True
-    for key in ("forces", "dynamics", "stability"):
-        a = np.array([c[key] for c in cand])
-        b = np.array([r[key] for r in ref])
-        absd = np.max(np.abs(a - b))
-        reld = absd / np.max(np.abs(b))
-        passed = reld <= args.rtol
-        ok &= passed
-        print(f"{key:10s} max abs diff {absd:.3e}  rel {reld:.3e}  "
-              f"{'ok' if passed else 'FAIL'}")
-    print(f"{len(pts)} evaluation points; " + ("IDENTICAL" if ok and args.rtol == 0
-                                                 else "PASSED" if ok else "FAILED"))
+        up = upstream_birds(Path(tmp))
+        for name in args.variants:
+            pkg = package_birds()            # fresh birds: defaults + variant
+            apply_upstream_variant(VARIANTS[name])
+            apply_package_variant(pkg, VARIANTS[name])
+            ref, cand = evaluate(up, pts), evaluate(pkg, pts)
+            print(f"[{name}]")
+            for key in ("forces", "dynamics", "stability"):
+                a = np.array([c[key] for c in cand])
+                b = np.array([r[key] for r in ref])
+                absd = np.max(np.abs(a - b))
+                reld = absd / np.max(np.abs(b))
+                passed = reld <= args.rtol
+                ok &= passed
+                print(f"    {key:10s} max abs diff {absd:.3e}  rel {reld:.3e}  "
+                      f"{'ok' if passed else 'FAIL'}")
+    print(f"{len(pts)} evaluation points x {len(args.variants)} variants; "
+          + ("IDENTICAL" if ok and args.rtol == 0 else "PASSED" if ok else "FAILED"))
     return 0 if ok else 1
 
 
