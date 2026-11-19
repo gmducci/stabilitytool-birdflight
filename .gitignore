@@ -17,3 +17,4 @@ papers/
 # Local environments and scratch baseline runs
 .venv/
 baseline/runs/
+.venv-baseline/

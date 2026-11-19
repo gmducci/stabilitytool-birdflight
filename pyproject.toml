@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stabilitytool-birdflight"
+version = "0.1.0.dev0"
+description = "Limit cycles and Floquet stability of nonlinear ODEs by multiple shooting, with a bird flapping-flight model (fork of multiflap)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+    { name = "Gianmarco Ducci" },
+    { name = "Victor Colognesi" },
+]
+keywords = ["limit cycle", "stability", "Floquet", "multiple shooting", "flapping flight", "bird"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+# Lower bounds are the oldest versions tested (baseline environment).
+dependencies = [
+    "numpy>=1.26.4",
+    "scipy>=1.17.1",
+    "matplotlib>=3.11.2",
+]
+
+[project.urls]
+"Upstream (multiflap)" = "https://github.com/vortexlab-uclouvain/multiflap"
+"Reference paper" = "https://doi.org/10.1007/s00332-021-09698-1"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"stabilitytool_birdflight.aero_package" = ["polar.txt"]
