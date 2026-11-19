@@ -20,6 +20,12 @@ Contact:
 Acknowledgement
 We acknowledge Tommaso Sartor for helping in structuring the code and the repository
 
+Modifications
+stabilitytool-birdflight is a modified version of multiflap v1.1
+(https://github.com/vortexlab-uclouvain/multiflap). Modifications made in 2026
+by Gianmarco Ducci (stabilitytool-birdflight project); see CHANGELOG.md for the
+list of changes.
+
 -----------------------------------------
 
 Licensed under the Apache License, Version 2.0 (the "License");

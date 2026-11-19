@@ -1,4 +1,21 @@
-# multiflap
+# stabilitytool-birdflight
+
+> **Fork of [multiflap](https://github.com/vortexlab-uclouvain/multiflap) v1.1**
+> (Apache 2.0), being refactored into reproducible research software. The
+> upstream README follows below and is still being updated; until then note:
+>
+> - import name: `import stabilitytool_birdflight` (was `import multiflap`);
+> - install: `uv sync` (Python >= 3.11, numpy 1.26 and 2.x), or
+>   `pip install -e .`;
+> - the scripts inside the package (`main.py`, `*_main.py`) run with
+>   `python -m stabilitytool_birdflight.main`, but still carry the upstream
+>   bugs (for example `main.py` fails after solving: `eigenvalues` undefined);
+> - reference outputs and the regression check: `baseline/README.md`;
+> - changes: `CHANGELOG.md`.
+>
+> Modified by the stabilitytool-birdflight project, 2026.
+
+## multiflap (upstream README)
 
 [![Static](https://img.shields.io/badge/docs-latest-blue)][stable docs url]
 [![Static](https://img.shields.io/badge/multiflap-v1.1-brightgreen)][stable link url]
