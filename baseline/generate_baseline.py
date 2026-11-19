@@ -115,14 +115,24 @@ def _bird_import():
     return np, MultipleShooting, Solver, BirdModel, Shoulder, Elbow, Wrist, Joint
 
 
+def _package_solve(model, **solver):
+    """Package target: solve through SolverConfig -> LimitCycleResult."""
+    from stabilitytool_birdflight.dynamics.config import SolverConfig
+    return SolverConfig(**solver).solve(model, verbose=True)
+
+
 def case_rossler():
     """``examples/rossler_system.py`` up to the solve (plotting skipped)."""
     mf = _toy_import()
     x = [.1, 5., 3.6]
     model = mf.Rossler(a=0.2, b=0.2, c=5.7)
-    ms_obj = mf.MultipleShootingPeriod(x, M=30, period_guess=5., t_steps=5000,
-                                       model=model, integrator='odeint')
-    sol = mf.SolverPeriod(ms_obj=ms_obj).lma()
+    if _target() == "package":
+        sol = _package_solve(model, x0=x, method="unknown_period", points=30,
+                             period_guess=5., t_steps=5000, integrator="odeint")
+    else:
+        ms_obj = mf.MultipleShootingPeriod(x, M=30, period_guess=5., t_steps=5000,
+                                           model=model, integrator='odeint')
+        sol = mf.SolverPeriod(ms_obj=ms_obj).lma()
     meta = dict(
         source="examples/rossler_system.py",
         solver="SolverPeriod (unknown period)",
@@ -141,9 +151,13 @@ def case_redox():
     mf = _toy_import()
     x = [0.5, 0.5, 0.6, 0.2]
     model = mf.RedoxModel()
-    ms_obj = mf.MultipleShootingPeriod(x, M=2, period_guess=23., t_steps=90000,
-                                       model=model, integrator='odeint')
-    sol = mf.SolverPeriod(ms_obj=ms_obj).lma()
+    if _target() == "package":
+        sol = _package_solve(model, x0=x, method="unknown_period", points=2,
+                             period_guess=23., t_steps=90000, integrator="odeint")
+    else:
+        ms_obj = mf.MultipleShootingPeriod(x, M=2, period_guess=23., t_steps=90000,
+                                           model=model, integrator='odeint')
+        sol = mf.SolverPeriod(ms_obj=ms_obj).lma()
     meta = dict(
         source="examples/redox_oscillator.py",
         solver="SolverPeriod (unknown period)",
@@ -163,11 +177,16 @@ def case_forced_vdp():
     mf = _toy_import()
     x = [1., 1.]
     model = mf.ForcedVanDerPol(lam=1.8)
-    ms_obj = mf.MultipleShooting(x, M=2, period=10.4719755, t_steps=4000,
-                                 model=model, option_jacobian='numerical')
-    # Upstream MultipleShooting.__init__ hard-codes self.dim = 4.
-    ms_obj.dim = model.dimension
-    sol = mf.Solver(tolerance=1e-6, ms_obj=ms_obj).lma()
+    if _target() == "package":   # dim taken from the model since Stage 4
+        sol = _package_solve(model, x0=x, method="known_period", points=2,
+                             period=10.4719755, t_steps=4000,
+                             jacobian="numerical", tolerance=1e-6)
+    else:
+        ms_obj = mf.MultipleShooting(x, M=2, period=10.4719755, t_steps=4000,
+                                     model=model, option_jacobian='numerical')
+        # Upstream MultipleShooting.__init__ hard-codes self.dim = 4.
+        ms_obj.dim = model.dimension
+        sol = mf.Solver(tolerance=1e-6, ms_obj=ms_obj).lma()
     meta = dict(
         source="examples/forced_van_der_pol.py",
         solver="Solver (known period)",
@@ -206,13 +225,21 @@ def case_lorenz():
     return sol, meta
 
 
-def _bird_case(shoulder_x_amp_deg, x0, M, t_steps, source, extra_note=None):
+def _bird_case(shoulder_x_amp_deg, x0, M, t_steps, source, extra_note=None,
+               config_file=None):
     """Bird model with the joint values hard-coded in ``multiflap/main.py``.
 
     Only the amplitude of ``shoulder.axis_z`` (the paper's A_s,x), x0, M and
     t_steps vary between bird cases. Period 0.25 s = 1 / (4 Hz).
     """
     np, MultipleShooting, Solver, BirdModel, Shoulder, Elbow, Wrist, Joint = _bird_import()
+    if _target() == "package":
+        # Package target: the case is specified only by its YAML file.
+        from stabilitytool_birdflight.flight.config import BirdCaseConfig
+        sol = BirdCaseConfig.load(REPO / "examples" / "configs" / config_file).solve(verbose=True)
+        return sol, dict(source=source, solver="BirdCaseConfig.solve",
+                         config_file=f"examples/configs/{config_file}",
+                         settings=dict(tolerance=1e-5), workarounds=[])
     shoulder = Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
                         axis_y=Joint(-np.deg2rad(19), np.deg2rad(20), np.pi / 2),
                         axis_z=Joint(0, np.deg2rad(shoulder_x_amp_deg), np.pi))
@@ -255,13 +282,14 @@ def _bird_case(shoulder_x_amp_deg, x0, M, t_steps, source, extra_note=None):
 def case_bird_main():
     """``multiflap/main.py`` as-is (A = 44 deg, x0 = [18, .5, .1, .01], M=2, 70 steps)."""
     return _bird_case(44, [18., 0.5, 0.1, 0.01], M=2, t_steps=70,
-                      source="multiflap/main.py")
+                      source="multiflap/main.py", config_file="bird_main.yaml")
 
 
 def case_bird_study1():
     """study_1 reference case (Sect. 4.1, Tables 1-2) as closely as the code allows."""
     return _bird_case(
         42, [16.5, 0.5, 0.5, 0.], M=5, t_steps=38,
+        config_file="bird_study1_reference.yaml",
         source="study_1 Sect. 4.1 / Table 1 (A_s,x = 42 deg) / Table 2 (M=5, "
                "150 time steps per period, RK4, tolerance 1e-5)",
         extra_note=("Table 2 asks for 150 time steps per period. In upstream "
@@ -277,6 +305,7 @@ def case_bird_a42_main_numerics():
     """Diagnostic: main.py numerics (M=2, 70 steps) with A = 42 deg and the paper's x0."""
     return _bird_case(
         42, [16.5, 0.5, 0.5, 0.], M=2, t_steps=70,
+        config_file="bird_a42_main_numerics.yaml",
         source="diagnostic: main.py with A_s,x = 42 deg and study_1 x0",
         extra_note=("Isolates the effect of the shoulder amplitude (44 -> 42 "
                     "deg) from the effect of the discretisation (M, t_steps)."))
@@ -349,7 +378,22 @@ def _sorted_multipliers(np, w):
     return np.asarray(w)[order], order
 
 
+def _collect_result(np, res):
+    """Arrays from a package LimitCycleResult (multipliers already sorted)."""
+    return dict(
+        points=res.points, points_history=res.points_history,
+        error_history=res.error_history, trajectory_t=res.trajectory_t,
+        trajectory_x=res.trajectory_x, monodromy=res.monodromy,
+        multipliers=res.multipliers, eigenvectors=res.eigenvectors,
+        multipliers_sorted=res.multipliers, eigenvectors_sorted=res.eigenvectors,
+        period=np.float64(res.period), n_iterations=np.int64(res.n_iterations),
+        final_error=np.float64(res.final_error), elapsed_s=np.float64(res.elapsed_s),
+    )
+
+
 def _collect(np, sol, elapsed):
+    if not isinstance(sol, tuple):
+        return _collect_result(np, sol)
     x, ptlist, error, complete_solution, jac_sg = sol
     eigvals, eigvecs = np.linalg.eig(jac_sg)
     msorted, order = _sorted_multipliers(np, eigvals)

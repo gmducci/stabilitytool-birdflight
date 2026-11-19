@@ -1,0 +1,62 @@
+# Diagnostic: main.py numerics with A_s,x = 42 deg and the study_1 x0
+#
+# Separates the effect of the shoulder amplitude from the discretisation.
+# Baseline case bird_a42_main_numerics.
+# Load with:  BirdCaseConfig.load("examples/configs/bird_a42_main_numerics.yaml")
+# All angles in degrees; lengths in metres; positions in the wing frame
+# (x spanwise, y up, z backward) relative to the centre of mass.
+
+kinematics:
+  frequency: 4.0                      # flapping frequency [Hz]
+  # Joint angles q(t) = offset + amplitude*sin(2*pi*f*t + phase),
+  # written [offset, amplitude, phase] in the code's joint axes. Mapping to
+  # study_1 Table 1 (Fig. 2 axes): shoulder_x = paper shoulder y,
+  # shoulder_y = paper shoulder z (opposite sign convention, same sweep),
+  # shoulder_z = paper shoulder x (A_s,x), elbow_y = paper elbow x,
+  # wrist_y = paper wrist z, elbow_x = paper wrist y; see baseline/README.md.
+  shoulder_x: [11.459155902616464, 0.8021409131831525, -90]   # 0.2 rad, 0.014 rad
+  shoulder_y: [-19, 20, 90]
+  shoulder_z: [0, 42, 180]                                      # A_s,x = 42 deg
+  elbow_x: [0, 30, -90]
+  elbow_y: [30, 30, -90]
+  wrist_y: [-30, 30, 90]
+  wrist_z: [0, 0, 0]
+  arm_length: 0.134
+  forearm_length: 0.162
+  hand_length: 0.084
+  # Seven master feathers from the most distal one. With the upstream
+  # skeleton discretisation only feathers 1, 3, 5 and 7 affect the wing.
+  feather_lengths: [0.25, 0.225, 0.2, 0.175, 0.15, 0.125, 0.1]
+  feather_spread_angles: [90, 67.5, 45, 22.5, 0, 0, 0]
+  feather_pitch_angles: [0, 0, 0, 0, 0, 0, 0]
+  body_half_width: 0.05               # half gap between the wing roots
+  kinematic_dt: 2.5e-05               # finite-difference step for the wing velocity [s]
+
+aerodynamics:
+  rho: 1.225                          # air density [kg/m^3]
+  cl_alpha: 6.283185307179586         # lift-curve slope, 2*pi [1/rad]
+  kin_viscosity: 1.5e-05              # [m^2/s]
+  tail_reference_velocity: 15.0       # velocity of the tail Reynolds number [m/s]
+  circulation_tol: 0.001
+  circulation_max_iterations: 50
+
+flight:
+  mass: 1.2                           # [kg]
+  g: 9.81                             # [m/s^2]
+  inertia_yy: 0.1                     # pitch moment of inertia [kg m^2]
+  wing_position: [0.0, -0.0, -0.05]   # wing frame 5 cm ahead of the centre of mass
+  tail:
+    length: 0.25
+    opening: 0.0                      # 0: no tail surface
+    position: [0.0, -0.0, 0.3]
+  stability_fd_step: 0.001            # relative step of the stability-matrix finite differences
+
+solver:
+  method: known_period                # the bird is forced by the wing motion
+  x0: [16.5, 0.5, 0.5, 0.0]                            # [u, w, q, theta]
+  points: 2                         # shooting points M
+  period: 0.25                        # must equal 1/frequency
+  t_steps: 70                  # points per interval (69 RK4 steps per period)
+  jacobian: analytical
+  tolerance: 1.0e-05
+  max_iterations: 100

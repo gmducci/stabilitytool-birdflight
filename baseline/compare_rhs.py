@@ -9,7 +9,9 @@ states and times:
 * ``dynamics(x, t)``,
 * ``get_stability_matrix(x, t)``,
 
-and reports the largest absolute and relative differences. The solver is
+and reports the largest absolute and relative differences. The package birds
+are built from the YAML case files in ``examples/configs`` (so the config
+path is checked too); the upstream birds as in ``main.py``. The solver is
 deterministic, so bitwise-identical right-hand sides imply bitwise-identical
 limit cycles: this takes seconds instead of the ~15 minutes of the full bird
 regression (``generate_baseline.py --target package``), which remains the
@@ -96,14 +98,18 @@ def upstream_birds(upstream_dir):
     return {a: BirdModel(**joints(Joint, Shoulder, Elbow, Wrist, a)) for a in (42, 44)}
 
 
+CASE_FILES = {42: "bird_study1_reference.yaml", 44: "bird_main.yaml"}
+
+
 def package_birds():
+    """Package birds built from the YAML case files (examples/configs)."""
     try:
         import stabilitytool_birdflight  # noqa: F401
     except ImportError:
         sys.path.insert(0, str(REPO / "src"))
-    from stabilitytool_birdflight.flight.bird_model import BirdModel
-    from stabilitytool_birdflight.kinematics.bird import Shoulder, Elbow, Wrist, Joint
-    return {a: BirdModel(**joints(Joint, Shoulder, Elbow, Wrist, a)) for a in (42, 44)}
+    from stabilitytool_birdflight.flight.config import BirdCaseConfig
+    return {a: BirdCaseConfig.load(REPO / "examples" / "configs" / f).build_model()
+            for a, f in CASE_FILES.items()}
 
 
 def sample_points(n_per_cycle):
