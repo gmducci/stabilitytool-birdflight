@@ -59,6 +59,11 @@ class BirdWing:
         Bone lengths [m].
     feather_lengths, feather_spread_angles, feather_pitch_angles : sequences
         Master feathers, from the most distal one (see ``Plumes.plumes``).
+        Note (upstream behaviour): the skeleton is sampled at four points
+        (shoulder, elbow, wrist, tip) and the trailing edge at each point is
+        interpolated between neighbouring feathers; at these points feathers
+        2, 4 and 6 get zero weight, so only feathers 1, 3, 5 and 7 shape the
+        wing.
     body_half_width : float
         Half the gap between the two wing roots [m] (lifting line merged
         across the body).

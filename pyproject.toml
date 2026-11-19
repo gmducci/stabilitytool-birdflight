@@ -42,4 +42,13 @@ dependencies = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"stabilitytool_birdflight.aero_package" = ["polar.txt"]
+"stabilitytool_birdflight.aerodynamics" = ["polar.txt"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: long-running tests (bird regression)"]
