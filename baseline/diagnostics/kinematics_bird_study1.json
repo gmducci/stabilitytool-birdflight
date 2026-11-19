@@ -1,0 +1,52 @@
+{
+  "case": "bird_study1",
+  "shoulder_amplitude_deg": 42,
+  "samples_per_period": 40,
+  "airspeed_mean_m_s": 18.182156961151986,
+  "u_mean_m_s": 18.08012861375978,
+  "w_mean_m_s": -1.9203214504023962,
+  "pitch_mean_deg": -6.297323415064464,
+  "pitch_range_deg": [
+    -6.780694564313218,
+    -5.840318762062381
+  ],
+  "body_aoa_mean_deg": -6.061800689877927,
+  "climb_rate_mean_m_s": -0.0745017892790685,
+  "flight_path_angle_deg": -0.23477137756119326,
+  "tip_xprime_range_m": [
+    -0.1863981115587275,
+    0.07561131710704046
+  ],
+  "tip_zprime_range_m": [
+    -0.3849346820555419,
+    0.423347136119692
+  ],
+  "stroke_amplitude_deg": 85.75314219742756,
+  "tip_elevation_range_deg": [
+    -45.23235487755021,
+    40.52078731987735
+  ],
+  "strouhal": 0.17781868672725892,
+  "reduced_frequency_pi_f_c_over_U": 0.10367062588785664,
+  "max_span_m": 1.26011038044369,
+  "wing_length_max_m": 0.6300793600809345,
+  "wing_length_min_m": 0.5560830451545272,
+  "wing_length_up_over_down": 0.928602648247449,
+  "t_over_T_max_wing_length": 0.0,
+  "t_over_T_min_wing_length": 0.5,
+  "downstroke_fraction": 0.5,
+  "aoa_eff_peak_deg": 16.069002300484804,
+  "aoa_eff_peak_location_y_over_ymax": 1.0,
+  "aoa_eff_peak_t_over_T": 0.375,
+  "aoa_before_downwash_peak_deg": 16.774770661942934,
+  "aoa_eff_three_quarter_span_range_deg": [
+    0.4005136001203092,
+    8.266749657245844
+  ],
+  "vertical_force_mean_N": 11.767895805066631,
+  "weight_N": 11.772,
+  "vertical_force_downstroke_mean_N": 13.98145413226661,
+  "vertical_force_upstroke_mean_N": 9.55433747786665,
+  "weight_support_fraction_downstroke": 0.5940507276690424,
+  "horizontal_force_mean_N": 0.0009198144563434291
+}

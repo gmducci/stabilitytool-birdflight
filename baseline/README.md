@@ -168,3 +168,65 @@ Observations:
    tested yet: the feather lengths, the RK2 monodromy integration, or
    upstream code changes after publication. (The shoulder-z offset is not a
    candidate: it is the same in code and paper, see above.)
+
+## Kinematics realism check
+
+`kinematics_check.py` evaluates the unmodified bird model along a stored limit
+cycle (default `bird_study1`, 40 samples per period) and reports kinematic and
+aerodynamic descriptors in the paper's body frame. Output for `bird_study1`:
+`diagnostics/kinematics_bird_study1.json`.
+
+```bash
+.venv/bin/python baseline/kinematics_check.py --json baseline/diagnostics/kinematics_bird_study1.json
+```
+
+### Consistent with cruising flight of a large bird
+
+| Quantity | Model (`bird_study1`) | Benchmark |
+|---|---|---|
+| Flight path | climb rate −0.075 m/s, flight-path angle −0.23° | level flight (not imposed by the model) |
+| Body pitch | −6.3° (range −6.8° to −5.8°); body AoA −6.1° | body aligned with the flow within 0.2° |
+| Airspeed | 18.2 m/s | 15–20 m/s for migrating birds (study_1 Sect. 5, citing Sperger et al. 2017, Pennycuick et al. 2013). Pennycuick's minimum-power speed for 1.2 kg and 1.35 m span is about 13 m/s, so 18 m/s is near the maximum-range speed |
+| Wingbeat frequency | 4 Hz (imposed) | Pennycuick's allometric estimate for this mass, span and wing area: about 4.0 Hz |
+| Strouhal number | 0.178 (study_1 Sect. 4.1: 0.18) | 0.2–0.4 for cruising flyers (Taylor, Nudds & Thomas 2003); just below the band |
+| Tip path | elliptical; forward and down in the downstroke, backward and up in the upstroke | general pattern of cruising birds; matches study_1 Fig. 9 |
+| Wing flexion timing | longest at t = 0 (mid-downstroke), shortest at t = 0.5T (mid-upstroke) | correct phase |
+| Periodicity | mean vertical force 11.77 N = weight; mean horizontal force 0.001 N | trimmed periodic orbit |
+
+### Limitations
+
+1. **Downstroke fraction 0.50, by construction.** All joints are single
+   harmonics at the same frequency. Real birds often spend somewhat more than
+   half the cycle in the downstroke, especially at lower speeds.
+2. **Mild upstroke flexion.** The shoulder-to-tip distance shrinks by at most
+   12% (mean upstroke/downstroke ratio 0.93). Real birds typically flex more.
+3. **Maximum span 1.26 m**, not the 1.35 m of study_1 Table 1. This is
+   consistent with the shorter feathers in `Plumes.py` (see above). Commonly
+   reported wingspans for the northern bald ibis are about 1.25–1.35 m.
+4. **Effective AoA peaks at 16.1°**, on the outermost strip at t ≈ 0.375T
+   (early upstroke, just after the bottom of the stroke). study_1 Appendix 2
+   states that the maximum stays below 15°. At 3/4 semispan the effective AoA
+   stays in [+0.4°, +8.3°]. The lift law is linear without stall
+   (`cl_alpha = 2*np.pi`, `aero_package/flapping_forces.py:35`), so tip lift
+   is overestimated there.
+5. **Upstroke carries 41% of the weight.** Lift stays positive over the whole
+   cycle (a loaded upstroke rather than a feathered one). Plausible for a
+   long-winged bird at cruise speed, but a model outcome, not validated.
+6. **No profile drag and no body drag.** Wing forces come only from
+   Kutta–Joukowski, `F = rho*gamma*cross(local_velocity, line_direction)`
+   (`aero_package/flapping_forces.py:164`), so the only drag is induced
+   drag. study_1 states that body forces are neglected; profile drag is not
+   discussed. Thrust and power requirements are therefore underestimated,
+   which probably raises the trimmed speed. This matters most for study_2's
+   power and cost-of-transport results.
+7. **Reduced frequency.** study_1 Eq. (27) writes k = (2πf)c/U ≈ 0.1. With
+   f = 4 Hz, c = 0.15 m and U = 18.2 m/s that formula gives 0.21; 0.10 is
+   πfc/U (half-chord convention). k ≈ 0.1 is commonly placed in the range
+   where unsteady effects start to matter, so the quasi-steady assumption is
+   borderline.
+
+Definitions: the tip is the outermost lifting-line point of the right wing.
+The effective AoA is Γ/(πVc), consistent with the solver's
+Γ = ½ V c (2π) α_eff. Downstroke means the tip is moving down (z′
+increasing). The Strouhal number uses the peak-to-peak vertical tip
+excursion and the mean airspeed.
