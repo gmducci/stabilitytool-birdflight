@@ -2,6 +2,7 @@
 file goodwin_main.py
 @author Gianmarco Ducci, Marta del Olmo
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,13 +23,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from  odes.goodwin_model import GoodwinModel
-from ms_package.rk_integrator import rk4
-from ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.odes.goodwin_model import GoodwinModel
+from stabilitytool_birdflight.ms_package.rk_integrator import rk4
+from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
 from matplotlib.ticker import FormatStrFormatter
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
 import matplotlib as mpl
 
 x = [0.1, 1, 1]

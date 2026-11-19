@@ -2,6 +2,7 @@
 file main_isothermal.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,10 +23,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from  odes.isothermal_reaction import IsothermalReaction
-from ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.odes.isothermal_reaction import IsothermalReaction
+from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
 import matplotlib.pyplot as plt
-from ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
 from mpl_toolkits.mplot3d import Axes3D
 
 # generate the ODEs object

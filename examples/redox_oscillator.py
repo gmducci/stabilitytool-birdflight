@@ -1,5 +1,6 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
-import multiflap as mf
+import stabilitytool_birdflight as mf
 import matplotlib.pyplot as plt
 
 x = [0.5, 0.5, 0.6, 0.2]

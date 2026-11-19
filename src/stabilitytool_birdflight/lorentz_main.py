@@ -2,6 +2,7 @@
 file lorentz_main.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,10 +23,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from  odes.lorentz import Lorentz
-from ms_package.lyapunov_exponents import LyapunovExponents
-from ms_package.multiple_shooting_period import MultipleShootingPeriod
-from ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.odes.lorentz import Lorentz
+from stabilitytool_birdflight.ms_package.lyapunov_exponents import LyapunovExponents
+from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.optimize import fsolve

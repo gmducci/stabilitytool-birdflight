@@ -2,6 +2,7 @@
 file bird_model.py
 @author Victor Colognesi, Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -28,7 +29,7 @@ from .RotationMatrix import RotationMatrix
 from .CompMatrix import CompMatrix
 from .Plumes import plumes
 from collections import namedtuple
-from odes.bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
+from ..odes.bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
 
 WingState = namedtuple('WingState',[
     'shoulder_x',

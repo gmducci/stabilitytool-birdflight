@@ -2,6 +2,7 @@
 file postrunning.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -24,7 +25,7 @@ limitations under the License.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import aero_package.bird_model as bm
+from ..aero_package import bird_model as bm
 
 class RetrievingAero:
     """Retrieve the aerodynamic variables of the limit cycle

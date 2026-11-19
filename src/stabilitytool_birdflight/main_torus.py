@@ -1,9 +1,10 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
-from  odes.torus import Torus
-from ms_package.rk_integrator import rk4
-from ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.odes.torus import Torus
+from stabilitytool_birdflight.ms_package.rk_integrator import rk4
+from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
 import matplotlib.pyplot as plt
-from ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.integrate import odeint
 # generate the ODEs object

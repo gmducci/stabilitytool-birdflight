@@ -2,6 +2,7 @@
 file bird_dynamics.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,7 +23,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from aero_package.flapping_forces import get_flappingforces
+from ..aero_package.flapping_forces import get_flappingforces
 import scipy.integrate as ode
 import time
 from math import sin, cos
