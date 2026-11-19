@@ -54,8 +54,16 @@ def rel_diff(a, b):
     return float(diff / scale)
 
 
-def compare_case(name, cand_dir, ref_dir, rtol):
-    ref_f, cand_f = ref_dir / f"{name}.npz", cand_dir / f"{name}.npz"
+def _field(npz, name):
+    # run directories (runs.py) store sorted multipliers as "multipliers"
+    if name == "multipliers_sorted" and name not in npz.files:
+        name = "multipliers"
+    return npz[name]
+
+
+def compare_case(name, cand_dir, ref_dir, rtol, cand_file=None):
+    ref_f = ref_dir / f"{name}.npz"
+    cand_f = Path(cand_file) if cand_file else cand_dir / f"{name}.npz"
     if not ref_f.exists() or not cand_f.exists():
         missing = ref_f if not ref_f.exists() else cand_f
         print(f"[{name}] MISSING {missing}")
@@ -69,25 +77,35 @@ def compare_case(name, cand_dir, ref_dir, rtol):
     print(f"    {'n_iterations':20s} {it_cand} vs {it_ref}  "
           f"{'ok' if it_ok else 'FAIL'}")
     for field in ENFORCED:
-        d = rel_diff(cand[field], ref[field])
+        d = rel_diff(_field(cand, field), _field(ref, field))
         passed = d <= rtol
         ok &= passed
         print(f"    {field:20s} {d:.3e}  {'ok' if passed else 'FAIL'}")
     for field in INFORMATIVE:
-        d = rel_diff(cand[field], ref[field])
+        d = rel_diff(_field(cand, field), _field(ref, field))
         print(f"    {field:20s} {d:.3e}  (info)")
     return ok
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("candidate")
+    p.add_argument("candidate", help="directory of <case>.npz files, or a run "
+                   "directory (with --case)")
+    p.add_argument("--case", help="compare the run directory CANDIDATE "
+                   "(result.npz, written by the CLI) with this baseline case")
     p.add_argument("--ref", default=str(REPO / "baseline" / "data"))
     p.add_argument("--cases", nargs="+", default=None)
     p.add_argument("--rtol", type=float, default=None,
                    help="override the per-case tolerance")
     args = p.parse_args(argv)
     cand_dir, ref_dir = Path(args.candidate), Path(args.ref)
+    if args.case:
+        ok = compare_case(args.case, cand_dir, ref_dir,
+                          args.rtol if args.rtol is not None
+                          else TOLERANCES.get(args.case, 1e-8),
+                          cand_file=cand_dir / "result.npz")
+        print("ALL PASSED" if ok else "FAILED: " + args.case)
+        return 0 if ok else 1
     cases = args.cases or sorted(f.stem for f in ref_dir.glob("*.npz"))
     results = {c: compare_case(c, cand_dir, ref_dir,
                                args.rtol if args.rtol is not None
