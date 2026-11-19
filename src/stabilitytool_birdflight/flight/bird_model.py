@@ -50,8 +50,11 @@ class BirdModel(BirdWing):
         Tail length [m] and opening angle [rad] (0: no tail).
     tail_chord : float
         Unused (as upstream).
-    rho : float
-        Air density [kg/m^3].
+    rho, cl_alpha, kin_viscosity, tail_reference_velocity : float
+        Air density [kg/m^3], lift-curve slope [1/rad], kinematic viscosity
+        [m^2/s], velocity of the tail Reynolds number [m/s].
+    circulation_tol, circulation_max_iterations : float, int
+        Convergence settings of the lifting-line circulation iteration.
     stability_fd_step : float
         Relative step of the finite differences in ``get_stability_matrix``.
 
@@ -63,7 +66,8 @@ class BirdModel(BirdWing):
     def __init__(self, shoulder=None, elbow=None, wrist=None, **wing_parameters):
 
         #Parameters:
-        self.dimensions = 4
+        self.dimension = 4
+        self.dimensions = 4  # upstream name
         self.g = 9.81
         self.mass = 1.2
         self.inertia_yy = 0.1
@@ -74,6 +78,11 @@ class BirdModel(BirdWing):
         self.tail_chord = 0.15
         self.tail_opening = 0.
         self.rho = 1.225  # air density [kg/m^3]
+        self.cl_alpha = 2*np.pi
+        self.kin_viscosity = 1.5e-5
+        self.tail_reference_velocity = 15
+        self.circulation_tol = 0.001
+        self.circulation_max_iterations = 50
         super().__init__(shoulder=shoulder, elbow=elbow, wrist=wrist,
                          **wing_parameters)
 
@@ -81,6 +90,7 @@ class BirdModel(BirdWing):
     get_aeroforces = get_aeroforces
     dynamics = dynamics
     get_stability_matrix = get_stability_matrix
+    jacobian = get_stability_matrix
 #bird_shoulder = Shoulder(axis_x=Joint(0.2,0.014,-np.pi/2), 
 #                         axis_y=Joint(-np.deg2rad(19),np.pi/12,np.pi/2), 
 #                         axis_z=Joint(0,np.deg2rad(42),np.pi))

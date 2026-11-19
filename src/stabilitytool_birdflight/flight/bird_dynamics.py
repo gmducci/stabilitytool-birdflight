@@ -95,7 +95,12 @@ def get_aeroforces(self, x0, t):
             tail_position=self.wingframe_position_tail,
             tail_length=self.tail_length,
             tail_opening=self.tail_opening,
-            rho=self.rho)
+            rho=self.rho,
+            cl_alpha=self.cl_alpha,
+            kin_viscosity=self.kin_viscosity,
+            tail_reference_velocity=self.tail_reference_velocity,
+            tol=self.circulation_tol,
+            max_iterations=self.circulation_max_iterations)
 
         aereodynamic_forces = [Fx, Fy, Fz, My,
                                F_tail, M_wing, M_tail, M_drag, M_lift]
