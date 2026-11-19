@@ -28,8 +28,8 @@ uv run python baseline/compare_baseline.py baseline/runs/candidate
 The same with numpy 1.26 (the baseline environment, see `ENVIRONMENT.md`):
 
 ```bash
-.venv-baseline/bin/python baseline/generate_baseline.py --target package --out baseline/runs/candidate-np126 --jobs 6
-.venv-baseline/bin/python baseline/compare_baseline.py baseline/runs/candidate-np126
+.venv-np126/bin/python baseline/generate_baseline.py --target package --out baseline/runs/candidate-np126 --jobs 6
+.venv-np126/bin/python baseline/compare_baseline.py baseline/runs/candidate-np126
 ```
 
 ## Stored fields (`<case>.npz`)

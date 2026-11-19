@@ -54,6 +54,36 @@ regression tolerance was relaxed from 1e-8 to 1e-6 accordingly; see
 
 ## [Unreleased]
 
+### Stage 4: configuration files, model interface, result object
+
+- A bird case is fully specified by one YAML (or JSON) file with sections
+  `kinematics`, `aerodynamics`, `flight`, `solver`; all angles in degrees.
+  `BirdCaseConfig.load(path).solve()` returns a `LimitCycleResult`;
+  `case.save(path)` writes the fully resolved case. Example files:
+  `examples/configs/` (the three baseline bird cases).
+- Per-module config dataclasses with validation: `kinematics.config`
+  (`WingConfig`, `JointConfig`), `aerodynamics.config`
+  (`AerodynamicsConfig`), `flight.config` (`FlightConfig`, `TailConfig`,
+  `BirdCaseConfig`), `dynamics.config` (`SolverConfig`). Shared reader and
+  validator: `configio`. New dependency: PyYAML.
+- The solver period of a bird case defaults to 1/frequency; an inconsistent
+  period is rejected.
+- `dynamics.model.ODEModel` Protocol (`dimension`, `dynamics(x, t)`,
+  optional `jacobian(x, t)`; `get_stability_matrix` still accepted).
+  `MultipleShooting` takes the dimension from the model (was hard-coded 4),
+  so the forced Van der Pol example works.
+- `dynamics.result.LimitCycleResult` replaces the positional tuple
+  (`mysol[3]`, `mysol[4]`); `Solver.lma()` keeps returning the tuple.
+- `BirdModel`: `dimension`, `jacobian`, and the remaining aerodynamic
+  parameters (`cl_alpha`, `kin_viscosity`, `tail_reference_velocity`,
+  `circulation_tol`, `circulation_max_iterations`) as attributes.
+- Baseline tools: `generate_baseline.py --target package` runs every case
+  through the new API (bird cases from the YAML files); `compare_rhs.py`
+  builds the package birds from the YAML files.
+- Tests: config round trip (YAML and JSON), validation errors, exact degree
+  conversion, config-built vs hand-built bird, toy regression through
+  `SolverConfig`, model Protocol (58 tests).
+
 ### Stage 3: independent modules and explicit parameters
 
 - New layout: `dynamics/` (multiple shooting, solvers, integrators,

@@ -295,7 +295,13 @@ Decided:
 - **Project name** (Stage 2): distribution `stabilitytool-birdflight`, import
   package `stabilitytool_birdflight`.
 - **Environment** (Stage 2): uv with `uv.lock`; Python >= 3.11.
-- **Config format** (tentative, confirm in Stage 4): YAML, JSON also accepted.
+- **Config format** (Stage 4): YAML as the main format, JSON also accepted
+  (PyYAML dependency). All angles in config files are in degrees.
+- **Config objects** (Stage 4): standard-library dataclasses with validation
+  in the package (no pydantic).
+- **Model interface** (Stage 4): keep the upstream names, formalised as a
+  Protocol: `dimension`, `dynamics(x, t)`, `jacobian(x, t)`, with
+  `get_stability_matrix` accepted as the upstream alias.
 
 Still open:
 
@@ -323,5 +329,10 @@ The upstream code is Apache License 2.0 (see `LICENSE` and `NOTICE`). Therefore:
   examples or tests, so `plt.show()` does not block.
 - Toy systems take seconds. Use them for quick feedback on solver changes.
 - Environments: `.venv` is the uv project environment (numpy 2, `uv run ...`);
-  `.venv-baseline` is numpy 1.26 (upstream baseline and numpy-1.26 checks).
+  `.venv-baseline` is the recorded numpy 1.26 environment (upstream
+  baseline only, keep it identical to `baseline/requirements-baseline.txt`);
+  `.venv-np126` is numpy 1.26 + PyYAML + pytest with the package installed,
+  for package checks on numpy 1.26.
+- Fast bird check after any change to the bird code:
+  `baseline/compare_rhs.py` (about 10 s, bitwise vs upstream).
   Regression check: `baseline/README.md`.

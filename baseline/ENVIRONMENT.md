@@ -38,9 +38,16 @@ uv pip install --python .venv-baseline/bin/python -r baseline/requirements-basel
 ```
 
 The upstream code is taken from the `upstream-v1.1` tag with `git archive`, so
-this works from any checkout. `.venv-baseline` is also the numpy 1.26 test
-environment for the package (`--target package` imports it from `src/` when it
-is not installed).
+this works from any checkout.
+
+Since Stage 4 the package needs PyYAML, so package checks on numpy 1.26 use a
+separate environment, `.venv-np126` (keep `.venv-baseline` unchanged):
+
+```bash
+uv venv --python 3.12 .venv-np126
+uv pip install --python .venv-np126/bin/python -r baseline/requirements-baseline.txt pyyaml==6.0.3 pytest==9.2.0
+uv pip install --python .venv-np126/bin/python --no-deps -e .
+```
 
 ## Run settings
 
