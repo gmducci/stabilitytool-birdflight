@@ -1,4 +1,12 @@
 # Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
+"""stabilitytool-birdflight: limit cycles, Floquet stability and bird flapping flight.
+
+Subpackages are independent: ``kinematics``, ``aerodynamics`` and ``dynamics``
+do not import each other; ``flight`` couples them. The names below (upstream
+multiflap API) are imported lazily, so importing one subpackage does not load
+the others.
+"""
+from importlib import import_module as _import_module
 from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
 from importlib.metadata import version as _version
 
@@ -7,14 +15,32 @@ try:
 except _PackageNotFoundError:  # running from a source tree without installation
     __version__ = "unknown"
 
-from .dynamics.multiple_shooting_period import MultipleShootingPeriod
-from .dynamics.lma_solver_period import SolverPeriod
-from .dynamics.multiple_shooting import MultipleShooting
-from .dynamics.lma_solver import Solver
-from .utilities.save_data import SaveData
-from .dynamics.systems.redox_oscillation import RedoxModel
-from .dynamics.systems.rossler import Rossler
-from .dynamics.systems.lorentz import Lorentz
-from .dynamics.systems.forced_vdp import ForcedVanDerPol
-from .dynamics.rk_integrator import rk2, rk3, rk4
-from .utils.mf_plots import Plot
+_LAZY = {
+    "MultipleShootingPeriod": ".dynamics.multiple_shooting_period",
+    "SolverPeriod": ".dynamics.lma_solver_period",
+    "MultipleShooting": ".dynamics.multiple_shooting",
+    "Solver": ".dynamics.lma_solver",
+    "SaveData": ".utilities.save_data",
+    "RedoxModel": ".dynamics.systems.redox_oscillation",
+    "Rossler": ".dynamics.systems.rossler",
+    "Lorentz": ".dynamics.systems.lorentz",
+    "ForcedVanDerPol": ".dynamics.systems.forced_vdp",
+    "rk2": ".dynamics.rk_integrator",
+    "rk3": ".dynamics.rk_integrator",
+    "rk4": ".dynamics.rk_integrator",
+    "Plot": ".utils.mf_plots",
+}
+
+__all__ = ["__version__", *_LAZY]
+
+
+def __getattr__(name):
+    if name in _LAZY:
+        value = getattr(_import_module(_LAZY[name], __name__), name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(_LAZY))
