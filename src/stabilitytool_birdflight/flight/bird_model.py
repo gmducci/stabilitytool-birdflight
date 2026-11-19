@@ -35,7 +35,6 @@ class BirdModel(BirdWing):
         self.dimensions = 4
         self.g = 9.81
         self.mass = 1.2
-        self.frequency = 4
         self.wingframe_position = np.array([0, -0.0, -0.05])
         self.wingframe_position_tail = np.array([0, -0., .3])
         self.tail_length = 0.25

@@ -2,6 +2,7 @@
 file Plumes.py
 @author Victor Colognesi
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -23,33 +24,25 @@ limitations under the License.
 '''
 import numpy as np
 
-def plumes():
-    lp1 = .25
-    lp2 = .225
-    lp3 = .2
-    lp4 = .175
-    lp5 = .15
-    lp6 = .125
-    lp7 = .1
-    pY1 = np.pi/2
-    pY2 = 3*np.pi/8
-    pY3 = np.pi/4
-    pY4 = np.pi/8
-    pY5 = 0
-    pY6 = 0
-    pY7 = 0
-    pX1 = 0
-    pX2 = 0
-    pX3 = 0
-    pX4 = 0
-    pX5 = 0
-    pX6 = 0
-    pX7 = 0
-    prot = np.array([[pY1, pY2, pY3, pY4, pY5, pY6, pY7],
-            [pX1, pX2, pX3, pX4, pX5, pX6, pX7]])
-    pvec = np.array([[0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0],
-            [lp1, lp2, lp3, lp4, lp5, lp6, lp7]])
+# Upstream values for the seven master feathers, from the most distal one.
+# Note: study_1 Table 1 lists different lengths (primaries 0.25, 0.275, 0.25;
+# secondaries 0.225, 0.2, 0.175, 0.15 m); see baseline/README.md.
+DEFAULT_FEATHER_LENGTHS = (.25, .225, .2, .175, .15, .125, .1)
+DEFAULT_FEATHER_SPREAD_ANGLES = (np.pi/2, 3*np.pi/8, np.pi/4, np.pi/8, 0, 0, 0)
+DEFAULT_FEATHER_PITCH_ANGLES = (0, 0, 0, 0, 0, 0, 0)
+
+
+def plumes(lengths=DEFAULT_FEATHER_LENGTHS,
+           spread_angles=DEFAULT_FEATHER_SPREAD_ANGLES,
+           pitch_angles=DEFAULT_FEATHER_PITCH_ANGLES):
+    """Rest rotations and vectors of the master feathers.
+
+    Returns ``prot`` (2 x n: spread angles about y, pitch angles about x [rad])
+    and ``pvec`` (3 x n: feather vectors, length along z [m]).
+    """
+    n = len(lengths)
+    prot = np.array([list(spread_angles), list(pitch_angles)])
+    pvec = np.array([[0]*n, [0]*n, list(lengths)])
     return prot, pvec
 
 if __name__ == "__main__":

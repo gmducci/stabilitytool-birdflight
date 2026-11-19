@@ -2,6 +2,7 @@
 file bird.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -24,19 +25,17 @@ limitations under the License.
 import numpy as np
 import math as m
 
-frequency  = 4
-omega = frequency*2*np.pi
-
 class Joint:
-    omega = frequency*2*np.pi
+    """Harmonic joint angle q(t) = offset + amplitude*sin(2*pi*f*t + phase)."""
 
     def __init__(self, offset=None, amplitude=None, phase=None):
         self.offset = offset
         self.amplitude = amplitude
         self.phase = phase
 
-    def motion_joint(self, t):
-
+    def motion_joint(self, t, frequency):
+        """Joint angle at time t for flapping frequency ``frequency`` [Hz]."""
+        omega = frequency*2*np.pi
         motion = self.offset + self.amplitude*np.sin(omega*t + self.phase)
         return motion
 

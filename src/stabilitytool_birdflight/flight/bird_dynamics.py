@@ -24,7 +24,6 @@ limitations under the License.
 '''
 import numpy as np  # Import NumPy
 from ..aerodynamics.flapping_forces import get_flappingforces
-from ..kinematics.wing import get_kinematicvelocity
 import scipy.integrate as ode
 import time
 from math import sin, cos
@@ -76,27 +75,8 @@ def get_aeroforces(self, x0, t):
         Outputs:
             aereodynamic_forces : components of the aereod. forces and moments
         """
-        dt = 0.25*1e-4
-        wing_state = self.get_wingstate(t)
-        wing_state_dt = self.get_wingstate(t-dt)
-
-        [leadingedge,
-         trailingedge] = self.get_wingenvelope(wing_state)
-
-        [leadingedge_dt,
-         trailingedge_dt] = self.get_wingenvelope(wing_state_dt)
-
-        lifting_line =  self.get_liftingline(leadingedge,
-                                             trailingedge)
-
-        lifting_line_dt =  self.get_liftingline(leadingedge_dt,
-                                                trailingedge_dt)
-
-        [line, chordir, updir, chord] = self.merge_lines(lifting_line)
-
-        [line_dt, _, _, _] = self.merge_lines(lifting_line_dt)
-
-        v_kinematics = get_kinematicvelocity(line, line_dt, dt)
+        [line, chordir, updir, chord,
+         v_kinematics] = self.get_lifting_line_kinematics(t)
 
         # call the aereodynamic solver for the lifting line get_flappingforces
         [Fx,

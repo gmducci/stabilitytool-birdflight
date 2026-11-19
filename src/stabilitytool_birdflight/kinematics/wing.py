@@ -29,7 +29,8 @@ from .bird import Joint, Shoulder, Elbow, Wrist
 from .line_functions import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
 from .RotationMatrix import RotationMatrix
 from .CompMatrix import CompMatrix
-from .Plumes import plumes
+from .Plumes import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
+                     DEFAULT_FEATHER_PITCH_ANGLES)
 from collections import namedtuple
 
 WingState = namedtuple('WingState',[
@@ -44,8 +45,43 @@ WingState = namedtuple('WingState',[
 
 
 class BirdWing:
+    """Kinematics and geometry of a poly-articulated bird wing pair.
 
-    def __init__(self, shoulder=None, elbow=None, wrist=None):
+    Defaults reproduce the upstream multiflap wing (northern bald ibis, study_1).
+
+    Parameters
+    ----------
+    shoulder, elbow, wrist : Shoulder, Elbow, Wrist
+        Joint gaits.
+    frequency : float
+        Flapping frequency [Hz], common to all joints.
+    arm_length, forearm_length, hand_length : float
+        Bone lengths [m].
+    feather_lengths, feather_spread_angles, feather_pitch_angles : sequences
+        Master feathers, from the most distal one (see ``Plumes.plumes``).
+    body_half_width : float
+        Half the gap between the two wing roots [m] (lifting line merged
+        across the body).
+    kinematic_dt : float
+        Time step [s] of the backward finite difference for the wing velocity.
+    """
+
+    def __init__(self, shoulder=None, elbow=None, wrist=None, frequency=4,
+                 arm_length=.134, forearm_length=.162, hand_length=.084,
+                 feather_lengths=DEFAULT_FEATHER_LENGTHS,
+                 feather_spread_angles=DEFAULT_FEATHER_SPREAD_ANGLES,
+                 feather_pitch_angles=DEFAULT_FEATHER_PITCH_ANGLES,
+                 body_half_width=0.05, kinematic_dt=0.25*1e-4):
+
+        self.frequency = frequency
+        self.arm_length = arm_length
+        self.forearm_length = forearm_length
+        self.hand_length = hand_length
+        self.feather_lengths = feather_lengths
+        self.feather_spread_angles = feather_spread_angles
+        self.feather_pitch_angles = feather_pitch_angles
+        self.body_half_width = body_half_width
+        self.kinematic_dt = kinematic_dt
 
         self.shoulder = Shoulder()
         self.wrist = Wrist()
@@ -72,15 +108,16 @@ class BirdWing:
         ## Wrist motion
         #ws.wrist_y = self.wrist.axis_y.motion_joint(t)
         #ws.wrist_z = self.wrist.axis_z.motion_joint(t)
-        state_shoulder_x = self.shoulder.axis_x.motion_joint(t)
-        state_shoulder_y = self.shoulder.axis_y.motion_joint(t)
-        state_shoulder_z = self.shoulder.axis_z.motion_joint(t)
+        f = self.frequency
+        state_shoulder_x = self.shoulder.axis_x.motion_joint(t, f)
+        state_shoulder_y = self.shoulder.axis_y.motion_joint(t, f)
+        state_shoulder_z = self.shoulder.axis_z.motion_joint(t, f)
         # Elbow motion
-        state_elbow_x = self.elbow.axis_x.motion_joint(t)
-        state_elbow_y = self.elbow.axis_y.motion_joint(t)
+        state_elbow_x = self.elbow.axis_x.motion_joint(t, f)
+        state_elbow_y = self.elbow.axis_y.motion_joint(t, f)
         # Wrist motion
-        state_wrist_y = self.wrist.axis_y.motion_joint(t)
-        state_wrist_z = self.wrist.axis_z.motion_joint(t)
+        state_wrist_y = self.wrist.axis_y.motion_joint(t, f)
+        state_wrist_z = self.wrist.axis_z.motion_joint(t, f)
 
         wing_state = [state_shoulder_x, state_shoulder_z, state_shoulder_y, state_elbow_y, state_elbow_x, state_wrist_y, state_wrist_z]
         #return ws
@@ -88,7 +125,9 @@ class BirdWing:
 
     def get_wingenvelope(self, wing_state):
         shoulder_x, shoulder_z, shoulder_y, elbow_y, elbow_x, wrist_y, wrist_z = wing_state
-        [plumesrot, plumesvec] = plumes()
+        [plumesrot, plumesvec] = plumes(self.feather_lengths,
+                                        self.feather_spread_angles,
+                                        self.feather_pitch_angles)
         dim_plumesrot0 = np.size(plumesrot[0])
         """
         Assignment of the dimensions of the skeleton and the frame position
@@ -98,13 +137,13 @@ class BirdWing:
         ey = [0, 1, 0]
 
         # Lenght of the first part of the wing skeleton
-        l1 = .134
+        l1 = self.arm_length
 
         # Lenght of the second part of the wing skeleton
-        l2 = .162
+        l2 = self.forearm_length
 
         # Lenght of the second third of the wing skeleton (l3 is used to connect l1 and l2)
-        l4 = .084
+        l4 = self.hand_length
 
         # Origin of the reference frame
         origin = [0, 0, 0]
@@ -486,7 +525,7 @@ class BirdWing:
 
     def merge_lines(self, line_package):
         line_r,updir_r,chordir_r,chord_r,line_l,updir_l,chordir_l,chord_l, dx = line_package
-        x_ep = 0.05
+        x_ep = self.body_half_width
         nmid = int(np.ceil(2*x_ep/dx))
         line_r[0,:] = line_r[0,:] + x_ep
         line_l[0,:] = line_l[0,:] - x_ep
@@ -505,6 +544,35 @@ class BirdWing:
         chord = np.concatenate([chord_l, chord_mid[1:-1]/1e4, chord_r])
         return line, chordir, updir, chord
 
+
+    def get_lifting_line_kinematics(self, t):
+        """Merged lifting line at time t and the velocity of its centre points.
+
+        Returns ``line, chordir, updir, chord, v_kin``; the velocity is a
+        backward finite difference over ``kinematic_dt``.
+        """
+        dt = self.kinematic_dt
+        wing_state = self.get_wingstate(t)
+        wing_state_dt = self.get_wingstate(t-dt)
+
+        [leadingedge,
+         trailingedge] = self.get_wingenvelope(wing_state)
+
+        [leadingedge_dt,
+         trailingedge_dt] = self.get_wingenvelope(wing_state_dt)
+
+        lifting_line =  self.get_liftingline(leadingedge,
+                                             trailingedge)
+
+        lifting_line_dt =  self.get_liftingline(leadingedge_dt,
+                                                trailingedge_dt)
+
+        [line, chordir, updir, chord] = self.merge_lines(lifting_line)
+
+        [line_dt, _, _, _] = self.merge_lines(lifting_line_dt)
+
+        v_kinematics = get_kinematicvelocity(line, line_dt, dt)
+        return line, chordir, updir, chord, v_kinematics
 
 
 def get_kinematicvelocity(line, line_dt, dt):
