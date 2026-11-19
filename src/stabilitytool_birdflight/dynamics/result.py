@@ -1,7 +1,7 @@
 """Structured result of a limit-cycle computation."""
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 
 import numpy as np
 
@@ -45,6 +45,9 @@ class LimitCycleResult:
         Final residual below the solver tolerance.
     elapsed_s : float
         Wall time of the solve [s].
+    iteration_times : ndarray
+        Wall time of each solver iteration [s] (same length as
+        ``error_history``).
     """
 
     points: np.ndarray
@@ -59,6 +62,7 @@ class LimitCycleResult:
     points_history: np.ndarray
     converged: bool
     elapsed_s: float
+    iteration_times: np.ndarray = field(default_factory=lambda: np.zeros(0))
 
     @property
     def final_error(self):
@@ -74,7 +78,8 @@ class LimitCycleResult:
         return np.log(self.multipliers.astype(complex)) / self.period
 
     @classmethod
-    def from_solver_output(cls, output, tolerance, elapsed_s=float("nan")):
+    def from_solver_output(cls, output, tolerance, elapsed_s=float("nan"),
+                           iteration_times=None):
         """Build from the tuple of ``Solver.lma()`` / ``SolverPeriod.lma()``."""
         x, ptlist, error, complete_solution, jac_sg = output
         eigvals, eigvecs = np.linalg.eig(jac_sg)
@@ -93,7 +98,19 @@ class LimitCycleResult:
             points_history=np.asarray([np.asarray(p, float) for p in ptlist]),
             converged=bool(error[-1] < tolerance),
             elapsed_s=float(elapsed_s),
+            iteration_times=np.asarray(iteration_times if iteration_times is not None
+                                       else [], float),
         )
+
+    @classmethod
+    def from_npz(cls, path):
+        """Read a result written with ``np.savez(path, **result.to_arrays())``."""
+        with np.load(path) as d:
+            kwargs = {f.name: d[f.name] for f in fields(cls) if f.name in d.files}
+        for name, conv in (("period", float), ("n_iterations", int),
+                           ("converged", bool), ("elapsed_s", float)):
+            kwargs[name] = conv(kwargs[name])
+        return cls(**kwargs)
 
     def to_arrays(self):
         """Dictionary of arrays (for ``np.savez``)."""

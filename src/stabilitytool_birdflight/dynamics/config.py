@@ -109,15 +109,21 @@ class SolverConfig:
                                   max_iterations=self.max_iterations, ms_obj=ms)
         return ms, solver
 
-    def solve(self, model, verbose=False):
+    def solve(self, model, verbose=False, log_stream=None):
         """Find the limit cycle of ``model``; returns a ``LimitCycleResult``.
 
-        The upstream solvers print progress; it is shown only with
-        ``verbose=True``.
+        The upstream solvers print progress: written to ``log_stream`` if
+        given, shown with ``verbose=True``, discarded otherwise.
         """
+        import numpy as np
         from .result import LimitCycleResult
         _, solver = self.build(model)
-        stream = contextlib.nullcontext() if verbose else contextlib.redirect_stdout(io.StringIO())
+        if log_stream is not None:
+            stream = contextlib.redirect_stdout(log_stream)
+        elif verbose:
+            stream = contextlib.nullcontext()
+        else:
+            stream = contextlib.redirect_stdout(io.StringIO())
         t0 = time.perf_counter()
         try:
             with stream:
@@ -126,5 +132,6 @@ class SolverConfig:
             # upstream solvers leave jac_sg undefined when they do not converge
             raise RuntimeError(f"solver did not converge within {self.max_iterations} "
                                f"iterations") from exc
-        return LimitCycleResult.from_solver_output(output, self.tolerance,
-                                                   time.perf_counter() - t0)
+        return LimitCycleResult.from_solver_output(
+            output, self.tolerance, time.perf_counter() - t0,
+            iteration_times=np.diff(solver.iteration_start_times))

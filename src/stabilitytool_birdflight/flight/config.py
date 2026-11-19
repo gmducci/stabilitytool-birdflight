@@ -130,6 +130,7 @@ class BirdCaseConfig:
         bird.circulation_max_iterations = a.circulation_max_iterations
         return bird
 
-    def solve(self, verbose=False):
+    def solve(self, verbose=False, log_stream=None):
         """Find the limit cycle; returns a ``dynamics.result.LimitCycleResult``."""
-        return self.solver.solve(self.build_model(), verbose=verbose)
+        return self.solver.solve(self.build_model(), verbose=verbose,
+                                 log_stream=log_stream)

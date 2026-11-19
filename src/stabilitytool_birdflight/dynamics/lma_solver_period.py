@@ -21,7 +21,10 @@ class SolverPeriod:
         dim = self.ms_obj.dim
         x_new = x
         # Start the iterative scheme
+        # wall-clock start of each iteration, plus the end of the last one
+        self.iteration_start_times = []
         for i in range(self.max_iterations):
+            self.iteration_start_times.append(time.perf_counter())
 
             start_timing = time.time()
             print("... Iteration i = " + str(i))
@@ -78,4 +81,5 @@ class SolverPeriod:
                     damp = damp * 10.0
                 ptlist.append(1*x)
 
+        self.iteration_start_times.append(time.perf_counter())
         return x, ptlist, error, complete_solution, jac_sg
