@@ -21,7 +21,8 @@ plus perturbed off-cycle states, for A_s,x = 42 and 44 deg.
 Parameter variants (``VARIANTS``): besides the defaults, non-default wing
 position and an open tail. Upstream can only see such values through its
 module-level ``SimulationsSettings`` instances (and the Reynolds number
-computed at import), so they are patched there; the package receives them as
+computed at import) and, for the frequency, the module constant ``omega`` of
+``aero_package/bird.py``, so they are patched there; the package receives them as
 ``BirdModel`` attributes. Equality shows that the explicit parameters mean
 exactly what the hidden settings meant.
 
@@ -64,6 +65,7 @@ VARIANTS = {
     "wing_position": dict(wingframe_position=np.array([0., 0., -0.08])),
     "open_tail": dict(tail_opening=np.deg2rad(40), tail_length=0.3,
                       wingframe_position_tail=np.array([0., 0., 0.35])),
+    "frequency": dict(frequency=5),
 }
 
 
@@ -77,6 +79,8 @@ def apply_upstream_variant(params):
         for k, v in params.items():
             setattr(inst, k, v)
     tm.Reynolds = float(15*tm.settings.tail_length/tm.kin_viscosity)
+    import aero_package.bird as bird     # frequency: module-level omega
+    bird.omega = params.get("frequency", 4)*2*np.pi
 
 
 def apply_package_variant(birds, params):
