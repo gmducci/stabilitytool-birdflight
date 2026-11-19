@@ -2,6 +2,7 @@
 file phase_animation_3D.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -116,6 +117,6 @@ for i in range(len(tArray)):
 
 plt.tight_layout()
 ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
-ani.save('../../anim/phase_animation_3D.mp4', writer='ffmpeg',fps=4000/50)
+ani.save('phase_animation_3D.mp4', writer='ffmpeg',fps=4000/50)
 plt.rcParams['animation.html'] = 'html5'
 ani

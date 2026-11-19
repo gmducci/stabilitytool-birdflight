@@ -22,6 +22,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+import sys
 import numpy as np
 from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
 from stabilitytool_birdflight.flight.bird_model import BirdModel
@@ -32,8 +33,15 @@ from numpy import inf
 from stabilitytool_birdflight.dynamics.lma_solver import Solver
 from stabilitytool_birdflight.utilities.save_data import SaveData
 
+# Usage: python -m stabilitytool_birdflight.main OUTPUT_FOLDER
+# (the same case as a config file: examples/configs/bird_main.yaml, run with
+#  "stabilitytool-birdflight run examples/configs/bird_main.yaml -o DIR",
+#  which also records the configuration and provenance)
+if len(sys.argv) != 2:
+    sys.exit("usage: python -m stabilitytool_birdflight.main OUTPUT_FOLDER")
+folder_results = sys.argv[1]
 sim_name = "bird_flight"
-SaveData(sim_name).make_folder()
+SaveData(sim_name, folder_results).make_folder()
 # generate bird kinematics by calling "bird" module
 bird_shoulder = Shoulder(axis_x=Joint(0.2,0.014,-np.pi/2),
                          axis_y=Joint(-np.deg2rad(19),np.deg2rad(20),np.pi/2),
@@ -57,9 +65,10 @@ mysol = Solver(ms_obj = ms_obj).lma()
 
 sol_array = mysol[3].space
 sol_time = mysol[3].time
+eigenvalues = np.linalg.eigvals(mysol[4])   # upstream: name used but never defined
 
 
 # save data
-SaveData(sim_name).save_data('multipliers_LC', eigenvalues)
-SaveData(sim_name).save_data('solution_LC', sol_array)
-SaveData(sim_name).save_data('time_array_LC', sol_time)
+SaveData(sim_name, folder_results).save_data('multipliers_LC', eigenvalues)
+SaveData(sim_name, folder_results).save_data('solution_LC', sol_array)
+SaveData(sim_name, folder_results).save_data('time_array_LC', sol_time)

@@ -1,109 +1,83 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
+"""Upstream helper to save arrays and text reports of a simulation.
+
+For new work prefer ``stabilitytool_birdflight.runs`` (``run_bird_case`` or the
+``stabilitytool-birdflight run`` command), which also records the resolved
+configuration and the provenance of the run.
+
+Changes from upstream: the results folder must be given explicitly (upstream
+default ``'../results'`` depended on the working directory); errors are raised
+instead of being swallowed by bare ``except:`` clauses; files are closed; the
+wrist offset and phase are written correctly (upstream wrote the amplitude).
+"""
+from pathlib import Path
+
 import numpy as np
-import os
+
+_ALIASES = {'multipliers_LC': 'floquet_multipliers', 'solution_LC': 'solution_LC',
+            'time_array_LC': 'time_array', 'fixed_points': 'fixed_points'}
+
+
 class SaveData:
 
-    def __init__(self, simulation_name, folder_results = '../results'):
+    def __init__(self, simulation_name, folder_results):
         self.simulation_name = simulation_name
-        self.folder_results = folder_results
-        self.folder_simulation =folder_results+'/'+simulation_name
-    def save_data(self, filename, data_array):
+        self.folder_results = str(folder_results)
+        self.folder_simulation = str(Path(folder_results) / simulation_name)
 
-        if filename == 'multipliers_LC':
-                np.save(self.folder_simulation+'/'+'floquet_multipliers', data_array)
-        elif filename == 'solution_LC':
-                np.save(self.folder_simulation+'/'+'solution_LC', data_array)
-        elif filename == 'time_array_LC':
-                np.save(self.folder_simulation+'/'+'time_array', data_array)
-        elif filename == 'fixed_points':
-                np.save(self.folder_simulation+'/'+'fixed_points', data_array)
-        else:
-                np.save(self.folder_simulation+'/'+filename, data_array, allow_pickle=True)
-        return print(filename+" file saved")
+    def save_data(self, filename, data_array):
+        name = _ALIASES.get(filename, filename)
+        np.save(Path(self.folder_simulation) / name, data_array, allow_pickle=True)
+        print(filename + " file saved")
 
     def make_folder(self):
-        path = self.folder_results+'/'+self.simulation_name
-        try:
-                os.mkdir(path)
-                print("Folder correctly created")
-        except:
-                print("Error in trying to create data folder")
-
-        return
+        """Create the simulation folder (and parents); existing folder is fine."""
+        Path(self.folder_simulation).mkdir(parents=True, exist_ok=True)
 
     def remove_contents(self):
-        path = self.folder_results+'/'+self.simulation_name
-        try:
-                os.remove(path+'/*')
-        except:
-                print("error removing file")
-
-        return print("simulation folder created")
-
+        """Delete the files directly inside the simulation folder."""
+        for f in Path(self.folder_simulation).iterdir():
+            if f.is_file():
+                f.unlink()
 
     def remove_directory(self):
-        path = self.folder_results+'/'+self.simulation_name
-        try:
-                os.rmdir(path)
-        except:
-                print("error removing file")
-
-        return ("Empty folder correctly removed")
+        """Remove the simulation folder (it must be empty)."""
+        Path(self.folder_simulation).rmdir()
 
     def write_simulation_settings(self, bird_obj):
-        simulation_info = open(self.folder_simulation+'/simulation_settings.txt', 'w+')
-        simulation_info.write('FRAMES COORDINATES (with respect to the aerodynamic reference system)'+'\n')
-        simulation_info.write('Wing frame position: '+str(bird_obj.wingframe_position)+'\n')
-        simulation_info.write('Tail frame position: '+str(bird_obj.wingframe_position_tail)+'\n')
-        simulation_info.write('Tail opening: '+str(round(np.rad2deg(bird_obj.tail_opening)))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('KINEMATICS'+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('- SHOULDER JOINT:'+'\n')
-        simulation_info.write('Amplitude shoulder x: '+str(np.rad2deg(bird_obj.shoulder.axis_x.amplitude))+'\n')
-        simulation_info.write('Offset shoulder x: '+str(np.rad2deg(bird_obj.shoulder.axis_x.offset))+'\n')
-        simulation_info.write('Phase shoulder x: '+str(np.rad2deg(bird_obj.shoulder.axis_x.phase))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('Amplitude shoulder y: '+str(np.rad2deg(bird_obj.shoulder.axis_y.amplitude))+'\n')
-        simulation_info.write('Offset shoulder y: '+str(np.rad2deg(bird_obj.shoulder.axis_y.offset))+'\n')
-        simulation_info.write('Phase shoulder y: '+str(np.rad2deg(bird_obj.shoulder.axis_y.phase))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('Amplitude shoulder z: '+str(np.rad2deg(bird_obj.shoulder.axis_z.amplitude))+'\n')
-        simulation_info.write('Offset shoulder z: '+str(np.rad2deg(bird_obj.shoulder.axis_z.offset))+'\n')
-        simulation_info.write('Phase shoulder z: '+str(np.rad2deg(bird_obj.shoulder.axis_z.phase))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('- ELBOW JOINT:'+'\n')
-        simulation_info.write('Amplitude elbow y: '+str(np.rad2deg(bird_obj.elbow.axis_y.amplitude))+'\n')
-        simulation_info.write('Offset elbow y: '+str(np.rad2deg(bird_obj.elbow.axis_y.offset))+'\n')
-        simulation_info.write('Phase elbow y: '+str(np.rad2deg(bird_obj.elbow.axis_y.phase))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('Amplitude elbow x: '+str(np.rad2deg(bird_obj.elbow.axis_x.amplitude))+'\n')
-        simulation_info.write('Offset elbow x: '+str(np.rad2deg(bird_obj.elbow.axis_x.offset))+'\n')
-        simulation_info.write('Phase elbow x: '+str(np.rad2deg(bird_obj.elbow.axis_x.phase))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('- WRIST JOINT:'+'\n')
-        simulation_info.write('Amplitude wrist y: '+str(np.rad2deg(bird_obj.wrist.axis_y.amplitude))+'\n')
-        simulation_info.write('Offset wrist y: '+str(np.rad2deg(bird_obj.wrist.axis_y.amplitude))+'\n')
-        simulation_info.write('Phase wrist y: '+str(np.rad2deg(bird_obj.wrist.axis_y.amplitude))+'\n')
-        simulation_info.write('----------------------------------'+'\n')
-        simulation_info.write('Amplitude wrist z: '+str(np.rad2deg(bird_obj.wrist.axis_z.amplitude))+'\n')
-        simulation_info.write('Offset wrist z: '+str(np.rad2deg(bird_obj.wrist.axis_z.amplitude))+'\n')
-        simulation_info.write('Phase wrist z: '+str(np.rad2deg(bird_obj.wrist.axis_z.amplitude))+'\n')
-        simulation_info.close() 
-
-        return
+        lines = [
+            'FRAMES COORDINATES (with respect to the aerodynamic reference system)',
+            'Wing frame position: ' + str(bird_obj.wingframe_position),
+            'Tail frame position: ' + str(bird_obj.wingframe_position_tail),
+            'Tail opening: ' + str(round(np.rad2deg(bird_obj.tail_opening))),
+            '----------------------------------',
+            'KINEMATICS',
+            '----------------------------------',
+            '----------------------------------',
+        ]
+        joints = [('SHOULDER', [('shoulder x', bird_obj.shoulder.axis_x),
+                                ('shoulder y', bird_obj.shoulder.axis_y),
+                                ('shoulder z', bird_obj.shoulder.axis_z)]),
+                  ('ELBOW', [('elbow y', bird_obj.elbow.axis_y),
+                             ('elbow x', bird_obj.elbow.axis_x)]),
+                  ('WRIST', [('wrist y', bird_obj.wrist.axis_y),
+                             ('wrist z', bird_obj.wrist.axis_z)])]
+        for title, axes in joints:
+            lines.append('- ' + title + ' JOINT:')
+            for k, (label, joint) in enumerate(axes):
+                lines += ['Amplitude ' + label + ': ' + str(np.rad2deg(joint.amplitude)),
+                          'Offset ' + label + ': ' + str(np.rad2deg(joint.offset)),
+                          'Phase ' + label + ': ' + str(np.rad2deg(joint.phase)),
+                          '----------------------------------']
+            lines.append('----------------------------------')
+        with open(Path(self.folder_simulation) / 'simulation_settings.txt', 'w') as f:
+            f.write('\n'.join(lines) + '\n')
 
     def write_simulation_results(self, error, multipliers):
-        simulation_info = open(self.folder_simulation+'/DataFile_Results.txt', 'w+')
-        simulation_info.write('Number of Iterations: '+str(np.size(error))+'\n')
-        simulation_info.write('Error: '+str((error[-1]))+'\n')
-        simulation_info.write('Floquet Multipliers: '+str(multipliers)+'\n')
-        simulation_info.write('|$Lambda_1$|: '+str(np.linalg.norm(multipliers[0]))+'\n')
-        simulation_info.write('|$Lambda_2$|: '+str(np.linalg.norm(multipliers[1]))+'\n')
-        simulation_info.write('|$Lambda_3$|: '+str(np.linalg.norm(multipliers[2]))+'\n')
-        simulation_info.write('|$Lambda_4$|: '+str(np.linalg.norm(multipliers[3]))+'\n')
-        simulation_info.close() 
-        
-        return
+        lines = ['Number of Iterations: ' + str(np.size(error)),
+                 'Error: ' + str(error[-1]),
+                 'Floquet Multipliers: ' + str(multipliers)]
+        lines += ['|$Lambda_%d$|: %s' % (k + 1, np.linalg.norm(m))
+                  for k, m in enumerate(multipliers[:4])]
+        with open(Path(self.folder_simulation) / 'DataFile_Results.txt', 'w') as f:
+            f.write('\n'.join(lines) + '\n')

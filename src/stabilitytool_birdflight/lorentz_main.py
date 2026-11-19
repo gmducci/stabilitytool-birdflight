@@ -92,7 +92,7 @@ for i in range(len(r_values)):
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     ax.set_zlabel('$z$')
-plt.savefig('/Users/gducci/Desktop/saddle_cycles.pdf', format = 'pdf')
+plt.savefig('saddle_cycles.pdf', format = 'pdf')  # upstream: absolute path on the author's machine
 plt.show()
 #hist = []
 #for i in range (len(time_array)):
