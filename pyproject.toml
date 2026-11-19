@@ -35,6 +35,9 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[project.scripts]
+stabilitytool-birdflight = "stabilitytool_birdflight.cli:main"
+
 [project.urls]
 "Upstream (multiflap)" = "https://github.com/vortexlab-uclouvain/multiflap"
 "Reference paper" = "https://doi.org/10.1007/s00332-021-09698-1"
@@ -52,4 +55,5 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["slow: long-running tests (bird regression)"]
+markers = ["slow: long-running tests (bird regression); run with -m slow"]
+addopts = "-m 'not slow'"
