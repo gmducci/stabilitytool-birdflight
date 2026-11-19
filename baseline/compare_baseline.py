@@ -26,9 +26,12 @@ REPO = Path(__file__).resolve().parents[1]
 # Relative tolerances (CLAUDE.md, Section 5, Stage 1). Bird cases started at
 # 1e-6; two independent runs were bitwise identical, so they are tightened to
 # 1e-8 like the toy systems (see baseline/README.md). Relax only with a reason.
+# redox: relaxed to 1e-6 in Stage 2. Its result moves by 2.2e-7 under a 1e-15
+# relative perturbation of x0 on the baseline environment itself (adaptive
+# odeint, default rtol 1.49e-8), and by 1.8e-7 with numpy 2.5.5 + Accelerate.
 TOLERANCES = {
     "rossler": 1e-8,
-    "redox": 1e-8,
+    "redox": 1e-6,
     "forced_vdp": 1e-8,
     "lorenz": 1e-8,
     "bird_main": 1e-8,

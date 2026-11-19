@@ -85,7 +85,8 @@ Every case was run twice in independent processes (`baseline/runs/run1`,
 generator. All runs are **bitwise identical** for every stored array except
 `elapsed_s`. Tolerances in `compare_baseline.py`:
 
-- toy systems: relative 1e-8 (as planned);
+- toy systems: relative 1e-8 (as planned), except `redox`: 1e-6 since
+  Stage 2 (see below);
 - bird cases: started at 1e-6, tightened to **1e-8** given bitwise
   run-to-run reproducibility. Different platforms or numpy 2 (Stage 2) may
   need this relaxed; if so, record the measured difference here.
@@ -95,6 +96,26 @@ Provenance note: the JSON files in `data/` record commit `92065b1` with
 was set only by untracked files (`multiflap-master.zip`, this README draft and
 `data/` itself). The generator was changed afterwards to ignore untracked
 files. `upstream_code_unmodified_vs_tag` is `true` for every case.
+
+Stage 2 (numpy 2.5.5, scipy 1.18.1; on macOS arm64 numpy 2 uses Apple
+Accelerate instead of the OpenBLAS bundled with numpy 1.26), measured
+differences of the package against `data/`:
+
+| Case | numpy 1.26.4 | numpy 2.5.5 |
+|---|---|---|
+| `rossler` | 0 | 1.1e-13 (multipliers), 2.2e-14 (points) |
+| `redox` | 0 | 1.8e-07 (multipliers), 1.8e-07 (points) |
+| `forced_vdp` | 0 | 0 |
+| `bird_main` | 0 | 1.1e-12 (multipliers), 4.9e-14 (points) |
+| `bird_study1` | 0 | 9.7e-13 (multipliers), 4.5e-15 (points) |
+| `bird_a42_main_numerics` | 0 | 8.3e-13 (multipliers), 1.7e-14 (points) |
+
+Iteration counts are unchanged everywhere. The redox difference comes from
+numpy (it is identical with numpy 2.5.5 and the old scipy 1.17.1), and it is
+at roundoff level for this case: on the baseline environment, perturbing x0
+by 1e-15 relative changes the converged result by 2.2e-7 (adaptive `odeint`,
+default rtol 1.49e-8). The redox tolerance is therefore relaxed to **1e-6**.
+All other tolerances stay at 1e-8.
 
 `n_iterations` must match exactly. Comparisons are norm-wise relative:
 `max|a − b| / max|b|` per array.
