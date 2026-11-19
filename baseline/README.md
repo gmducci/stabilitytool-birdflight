@@ -94,17 +94,31 @@ files. `upstream_code_unmodified_vs_tag` is `true` for every case.
 ### Parameters
 
 Table 1(b) of study_1 against the joints hard-coded in `main.py`. The paper
-and the code label the joint axes differently; matching rows by value gives:
+and the code use different reference systems for the joint angles. The paper's
+frame (Fig. 2) is x forward, y right (spanwise), z down. The code's wing frame
+is x spanwise (right wing), y up, z backward. This follows from
+`U = [0, w, u]` and `ang_velocity = [q, 0, 0]` in
+`aero_package/flapping_forces.py`, the force signs in `odes/bird_dynamics.py`,
+and `wingframe_position = [0, 0, -0.05]` (5 cm ahead of the centre of mass).
+Matching rows by value gives:
 
 | Paper row (q0, A, φ) [deg] | Code joint (`Joint(offset, amplitude, phase)`) | Match |
 |---|---|---|
 | Shoulder y (11.5, 0.8, −90) | `shoulder.axis_x` (0.2 rad = 11.46°, 0.014 rad = 0.80°, −90°) | yes (rounding) |
 | Shoulder x (0, A_s,x, 180) | `shoulder.axis_z` (0, 44°, 180°) | amplitude: 44° in code, 42° in paper |
-| Shoulder z (19, 20, 90) | `shoulder.axis_y` (−19°, 20°, 90°) | **offset sign differs** |
+| Shoulder z (19, 20, 90) | `shoulder.axis_y` (−19°, 20°, 90°) | yes: same backward sweep, opposite sign because the axes differ (paper z down, code y up) |
 | Elbow x (30, 30, −90) | `elbow.axis_y` (30°, 30°, −90°) | yes |
 | Wrist z (−30, 30, 90) | `wrist.axis_y` (−30°, 30°, 90°) | yes |
-| Wrist y (0, 30, −90) | `elbow.axis_x` (0, 30°, −90°) | values yes, **joint differs** (wrist in paper, elbow in code) |
+| Wrist y (0, 30, −90) | `elbow.axis_x` (0, 30°, −90°) | values yes, but the joint is labelled differently (wrist in paper, elbow in code); not checked physically |
 | — | `wrist.axis_z` (0, 0, 0) | inactive in code, absent from paper |
+
+Check of the shoulder kinematics: the right-wing lifting-line tip computed
+from the code as-is, in the paper's body frame relative to G, spans
+x′ ∈ [−0.19, +0.08] m and z′ ∈ [−0.39, +0.42] m. At t = 0 it sits at
+x′ = +0.05 m, z′ ≈ 0 and moves down. This matches Fig. 9 (tip path) and the
+statement that t = 0 is mid-downstroke (Sect. 4.1, Fig. 8). With the offset
+set to +19° in the code instead, the wing sweeps forward (x′ up to +0.45 m),
+which contradicts Fig. 9. So the code's −19° is the paper's +19°.
 
 Other parameters:
 
@@ -151,5 +165,6 @@ Observations:
    result only at the 1e-3 level, so it does not explain the gap.
 3. The leading eigenvector agrees with the paper to about 0.01.
 4. So the remaining differences come from something else. Candidates, none
-   tested yet: the feather lengths, the sign of the shoulder-z offset, the
-   RK2 monodromy integration, or upstream code changes after publication.
+   tested yet: the feather lengths, the RK2 monodromy integration, or
+   upstream code changes after publication. (The shoulder-z offset is not a
+   candidate: it is the same in code and paper, see above.)
