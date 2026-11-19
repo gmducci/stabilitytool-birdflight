@@ -24,6 +24,7 @@ limitations under the License.
 '''
 import numpy as np  # Import NumPy
 from ..aerodynamics.flapping_forces import get_flappingforces
+from ..kinematics.wing import get_kinematicvelocity
 import scipy.integrate as ode
 import time
 from math import sin, cos
@@ -113,14 +114,6 @@ def get_aeroforces(self, x0, t):
                                F_tail, M_wing, M_tail, M_drag, M_lift]
         return aereodynamic_forces
 
-
-def get_kinematicvelocity(line, line_dt, dt):
-
-       line_c = line[:, 1:-1:2]
-       line_c2 = line_dt[:, 1:-1:2]
-       v_kin =  (line_c - line_c2)/dt
-
-       return v_kin
 
 def get_stability_matrix(self, x0, t):
 
