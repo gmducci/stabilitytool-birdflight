@@ -23,12 +23,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.odes.rossler import Rossler
-from stabilitytool_birdflight.ms_package.rk_integrator import rk4
-from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
+from stabilitytool_birdflight.dynamics.rk_integrator import rk4
+from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod
 
 x = [10., 10., 3.6]
 

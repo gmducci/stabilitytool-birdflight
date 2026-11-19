@@ -42,8 +42,8 @@ WINGFRAME_POSITION = np.array([0.0, 0.0, -0.05])  # upstream default, code frame
 
 
 def build_bird(amplitude_deg):
-    from stabilitytool_birdflight.aero_package.bird_model import BirdModel
-    from stabilitytool_birdflight.aero_package.bird import Shoulder, Elbow, Wrist, Joint
+    from stabilitytool_birdflight.flight.bird_model import BirdModel
+    from stabilitytool_birdflight.kinematics.bird import Shoulder, Elbow, Wrist, Joint
     d = np.deg2rad
     shoulder = Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
                         axis_y=Joint(-d(19), d(20), np.pi / 2),
@@ -60,7 +60,7 @@ def analyse(case, n_samples):
         import stabilitytool_birdflight  # noqa: F401
     except ImportError:  # not installed: use the source tree
         sys.path.insert(0, str(REPO / "src"))
-    import stabilitytool_birdflight.aero_package.flapping_forces as ff
+    import stabilitytool_birdflight.aerodynamics.flapping_forces as ff
 
     captured = {}
     original = ff.circulation

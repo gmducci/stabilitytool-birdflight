@@ -23,13 +23,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from .bird import Joint, Shoulder, Elbow, Wrist
-from .line_functions import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
-from .RotationMatrix import RotationMatrix
-from .CompMatrix import CompMatrix
-from .Plumes import plumes
+from ..kinematics.bird import Joint, Shoulder, Elbow, Wrist
+from ..kinematics.line_functions import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
+from ..kinematics.RotationMatrix import RotationMatrix
+from ..kinematics.CompMatrix import CompMatrix
+from ..kinematics.Plumes import plumes
 from collections import namedtuple
-from ..odes.bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
+from .bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
 
 WingState = namedtuple('WingState',[
     'shoulder_x',

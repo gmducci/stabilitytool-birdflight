@@ -23,13 +23,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.ms_package.multiple_shooting import MultipleShooting
-from stabilitytool_birdflight.aero_package.bird_model import BirdModel
-from stabilitytool_birdflight.aero_package.bird import Shoulder, Elbow, Wrist, Joint
+from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
+from stabilitytool_birdflight.flight.bird_model import BirdModel
+from stabilitytool_birdflight.kinematics.bird import Shoulder, Elbow, Wrist, Joint
 import time
 from numpy.linalg import norm
 from numpy import inf
-from stabilitytool_birdflight.ms_package.lma_solver import Solver
+from stabilitytool_birdflight.dynamics.lma_solver import Solver
 from stabilitytool_birdflight.utilities.save_data import SaveData
 
 sim_name = "bird_flight"

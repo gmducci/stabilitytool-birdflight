@@ -25,7 +25,7 @@ limitations under the License.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from ..aero_package import bird_model as bm
+from ..flight import bird_model as bm
 
 class RetrievingAero:
     """Retrieve the aerodynamic variables of the limit cycle

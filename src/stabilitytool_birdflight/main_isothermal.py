@@ -23,10 +23,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.odes.isothermal_reaction import IsothermalReaction
-from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.dynamics.systems.isothermal_reaction import IsothermalReaction
+from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 import matplotlib.pyplot as plt
-from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod
 from mpl_toolkits.mplot3d import Axes3D
 
 # generate the ODEs object

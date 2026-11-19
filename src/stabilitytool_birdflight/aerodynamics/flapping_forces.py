@@ -2,6 +2,7 @@
 file flapping_forces.py
 @author Victor Colognesi, Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,11 +23,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from .MergeLines import MergeLines
 from .circulation import circulation, inucedvel_filament, inducedvel_segment
 from .TailModels import delta_tail, tail_geometry 
 from .settings import SimulationsSettings 
-from .bird import Shoulder, Elbow, Wrist, Joint
 settings = SimulationsSettings()
 def get_flappingforces(x0, v_kin, line, chordir, updir, chord):
 

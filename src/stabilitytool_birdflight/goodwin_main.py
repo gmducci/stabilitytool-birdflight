@@ -23,13 +23,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.odes.goodwin_model import GoodwinModel
-from stabilitytool_birdflight.ms_package.rk_integrator import rk4
-from stabilitytool_birdflight.ms_package.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.dynamics.systems.goodwin_model import GoodwinModel
+from stabilitytool_birdflight.dynamics.rk_integrator import rk4
+from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 from matplotlib.ticker import FormatStrFormatter
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from stabilitytool_birdflight.ms_package.lma_solver_period import SolverPeriod
+from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod
 import matplotlib as mpl
 
 x = [0.1, 1, 1]
