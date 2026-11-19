@@ -1,3 +1,4 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 from .rk_integrator import rk2, rk3, rk4
 import time
@@ -79,7 +80,7 @@ class MultipleShooting:
 
 
     def jacobian_ode(self, x0_jacobian, t):
-        """
+        r"""
         Set up the additional ODE system (d + d^2) to evaluate analytically the
         Jacobian matrix.
         This function is used to unpack the Jacobian elements to solve

@@ -1,3 +1,4 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 import re
 import glob
@@ -66,8 +67,8 @@ sc = ax1.scatter(conditional_array[~indices,1], conditional_array[~indices,2], m
 #ax1.plot(x, max(y))
 plt.colorbar(sc)
 #ax1.scatter(conditional_array[indices,1], conditional_array[indices,2], c='red')
-ax1.set_ylabel('Sweep offset [$\deg$]')
-ax1.set_xlabel('Tail opening [$\deg$]')
+ax1.set_ylabel(r'Sweep offset [$\deg$]')
+ax1.set_xlabel(r'Tail opening [$\deg$]')
 ax1.grid(False)
 plt.show()
 fig2 = plt.figure()
@@ -85,8 +86,8 @@ sc = ax2.scatter(conditional_array[~indices,1], conditional_array[~indices,2], m
 plt.colorbar(sc)
 #ax1.scatter(conditional_array[indices,1], conditional_array[indices,2], c='red')
 full_matrix = np.array([x,y,list_multipliers])
-ax2.set_ylabel('Sweep offset [$\deg$]')
-ax2.set_xlabel('Tail opening [$\deg$]')
+ax2.set_ylabel(r'Sweep offset [$\deg$]')
+ax2.set_xlabel(r'Tail opening [$\deg$]')
 ax2.grid(False)
 plt.show()
 fig2 = plt.figure()
