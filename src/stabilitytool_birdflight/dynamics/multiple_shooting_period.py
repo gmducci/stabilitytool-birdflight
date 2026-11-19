@@ -1,6 +1,7 @@
 # Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 from .rk_integrator import rk2, rk3, rk4
+from .model import get_dimension, get_jacobian
 import time
 import collections
 from scipy.integrate import odeint
@@ -11,7 +12,7 @@ class MultipleShootingPeriod:
                  option_jacobian = 'analytical', integrator='rk'):
 
         self.point_number = M
-        self.dim = model.dimension  # number of states of the ODE system
+        self.dim = get_dimension(model)  # number of states of the ODE system
         self.x0 = x0        # first initial guess
         self.model = model
         self.option_jacobian = option_jacobian
@@ -120,7 +121,7 @@ class MultipleShootingPeriod:
         #Last dxd elements of the velJ are determined by the action of
         #stability matrix on the current value of the Jacobian:
 
-        velTangent = np.dot(self.model.get_stability_matrix(x0, t), J)
+        velTangent = np.dot(get_jacobian(self.model)(x0, t), J)
 
         # shape a back a (dxd) array in a d^2 matrix
 

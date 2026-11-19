@@ -1,6 +1,7 @@
 # Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 from .rk_integrator import rk2, rk3, rk4
+from .model import get_dimension, get_jacobian
 import time
 import collections
 
@@ -9,7 +10,7 @@ class MultipleShooting:
     def __init__(self, x0, M = 2, period = 0.25,
                  t_steps = 70, model = None, option_jacobian = 'analytical'):
         self.point_number = M
-        self.dim = 4  # number of states of the ODE system
+        self.dim = get_dimension(model)  # number of states (upstream: hard-coded 4)
         self.x0 = x0        # first initial guess
 #        if not isinstance(model, Model):
  #           raise TypeError("Model missing!")
@@ -113,7 +114,7 @@ class MultipleShooting:
         #Last dxd elements of the velJ are determined by the action of
         #stability matrix on the current value of the Jacobian:
 
-        velTangent = np.dot(self.model.get_stability_matrix(x0, t), J)
+        velTangent = np.dot(get_jacobian(self.model)(x0, t), J)
 
         # shape a back a (dxd) array in a d^2 matrix
 
