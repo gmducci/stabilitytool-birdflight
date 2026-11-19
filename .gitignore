@@ -1,0 +1,12 @@
+*.pyc
+__pycache__
+
+*.egg-info
+build
+dist
+
+multiflap/TODO
+multiflap/*.swp
+postprocessing
+
+results/*
