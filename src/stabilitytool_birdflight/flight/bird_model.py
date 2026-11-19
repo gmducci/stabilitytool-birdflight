@@ -28,20 +28,54 @@ from .bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
 
 
 class BirdModel(BirdWing):
+    """Longitudinal flight dynamics of a flapping bird, state x = [u, w, q, theta].
 
-    def __init__(self, shoulder=None, elbow=None, wrist=None):
+    Couples the wing kinematics (``BirdWing``: joints, frequency, morphology)
+    with the lifting-line aerodynamics. All parameters are read at call time,
+    so changing an attribute changes the model. Defaults reproduce upstream
+    multiflap (study_1 reference bird).
+
+    Attributes
+    ----------
+    g : float
+        Gravitational acceleration [m/s^2].
+    mass : float
+        Body mass [kg].
+    inertia_yy : float
+        Pitch moment of inertia [kg m^2] (hard-coded 0.1 upstream).
+    wingframe_position, wingframe_position_tail : (3,) arrays
+        Wing and tail frame origins relative to the centre of mass, in the
+        wing frame (x spanwise, y up, z backward) [m].
+    tail_length, tail_opening : float
+        Tail length [m] and opening angle [rad] (0: no tail).
+    tail_chord : float
+        Unused (as upstream).
+    rho : float
+        Air density [kg/m^3].
+    stability_fd_step : float
+        Relative step of the finite differences in ``get_stability_matrix``.
+
+    Keyword arguments other than the joints are passed to ``BirdWing``
+    (``frequency``, bone and feather geometry, ``body_half_width``,
+    ``kinematic_dt``).
+    """
+
+    def __init__(self, shoulder=None, elbow=None, wrist=None, **wing_parameters):
 
         #Parameters:
         self.dimensions = 4
         self.g = 9.81
         self.mass = 1.2
+        self.inertia_yy = 0.1
+        self.stability_fd_step = 1e-3
         self.wingframe_position = np.array([0, -0.0, -0.05])
         self.wingframe_position_tail = np.array([0, -0., .3])
         self.tail_length = 0.25
         self.tail_chord = 0.15
         self.tail_opening = 0.
         self.rho = 1.225  # air density [kg/m^3]
-        super().__init__(shoulder=shoulder, elbow=elbow, wrist=wrist)
+        super().__init__(shoulder=shoulder, elbow=elbow, wrist=wrist,
+                         **wing_parameters)
 
     # calling methods of BirdModel that are defined in other files
     get_aeroforces = get_aeroforces

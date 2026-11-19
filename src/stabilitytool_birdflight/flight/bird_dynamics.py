@@ -50,7 +50,7 @@ def dynamics(self, x0, t):
         # bird body dynamics
         dudt = -q*w - self.g*np.sin(theta) - Fz/self.mass
         dwdt = q*u + self.g*np.cos(theta) - Fy/self.mass - F_tail/self.mass
-        dqdt =  My/0.1
+        dqdt =  My/self.inertia_yy
         dthetadt = q
 
         # collecting x_dot components in a single array:
@@ -115,7 +115,8 @@ def get_stability_matrix(self, x0, t):
     """
     m = self.mass
     g = self.g
-    perturbation = 1e-3
+    Iyy = self.inertia_yy
+    perturbation = self.stability_fd_step
     x0_u = x0 + [x0[0]*perturbation, 0, 0, 0]
     x0_w = x0 + [0, x0[1]*perturbation, 0, 0]
     x0_q = x0 + [0, 0, x0[2]*perturbation, 0]
@@ -153,6 +154,6 @@ def get_stability_matrix(self, x0, t):
                    -w - dFzq_dq/m, -g*np.cos(theta)],
                   [q - dFyu_dU/m - dFytail_du/m, -dFyw_dW/m - dFytail_dw/m,
                    u - dFyq_dq/m - dFytail_dq/m, -g*np.sin(theta)],
-                  [dMy_du/0.1, dMy_dw/0.1, dMy_dq/0.1, 0],
+                  [dMy_du/Iyy, dMy_dw/Iyy, dMy_dq/Iyy, 0],
                   [0, 0, 1, 0]], float)
     return A
