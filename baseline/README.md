@@ -8,6 +8,11 @@ tolerances below (CLAUDE.md, ground rule 1).
   file is edited; all workarounds are in this script and listed per case in the
   JSON summaries.
 - `compare_baseline.py`: compares a candidate output directory with `data/`.
+- `compare_rhs.py`: fast check (about 10 s) that the bird right-hand side of
+  the package (forces, dynamics, stability matrix) is bitwise identical to the
+  upstream tag at 24 states, for default and non-default parameters. Use it
+  after every change to the bird code; the full bird regression remains the
+  end-of-stage check.
 - `ENVIRONMENT.md`, `requirements-baseline.txt`: the exact environment.
 - `data/`: one `<case>.npz` (arrays), `<case>.json` (readable summary with
   settings and provenance) and `<case>.log` (upstream console output) per case.

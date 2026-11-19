@@ -135,7 +135,7 @@ the number of time steps.
   docstrings of `multiple_shooting.py` and `multiple_shooting_period.py`.
 - There are no tests.
 
-### Critical: silently ignored parameters
+### Critical: silently ignored parameters (fixed in Stage 3, see CHANGELOG.md)
 
 `BirdModel.__init__` (`aero_package/bird_model.py`) defines
 `frequency`, `wingframe_position`, `wingframe_position_tail`, `tail_length`,
