@@ -107,8 +107,15 @@ def get_aeroforces(self, x0, t):
          M_wing,
          M_tail,
          M_drag,
-         M_lift] = get_flappingforces(x0, v_kinematics,
-                                      line, chordir, updir, chord)
+         M_lift] = get_flappingforces(
+            np.array([0, x0[1], x0[0]]),          # free stream [0, w, u]
+            np.array([x0[2], 0, 0]),              # angular velocity [q, 0, 0]
+            v_kinematics, line, chordir, updir, chord,
+            wing_position=self.wingframe_position,
+            tail_position=self.wingframe_position_tail,
+            tail_length=self.tail_length,
+            tail_opening=self.tail_opening,
+            rho=self.rho)
 
         aereodynamic_forces = [Fx, Fy, Fz, My,
                                F_tail, M_wing, M_tail, M_drag, M_lift]

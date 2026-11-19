@@ -2,6 +2,7 @@
 file TailModels.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -22,33 +23,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from .settings import SimulationsSettings
 
-settings = SimulationsSettings()
-rho = 1.225
-kin_viscosity = 1.5e-5
-Reynolds = float(15*settings.tail_length/kin_viscosity)
 
-def delta_tail(velocity_vector, tail_span):
+def delta_tail(velocity_vector, tail_span, *, tail_length, rho=1.225,
+               kin_viscosity=1.5e-5, reference_velocity=15):
+    """Tail forces (slender-body lift, induced and skin-friction drag).
+
+    The Reynolds number of the skin friction uses ``reference_velocity``
+    and ``tail_length`` (upstream: 15 m/s, computed once at import time).
+    """
+    Reynolds = float(reference_velocity*tail_length/kin_viscosity)
     alpha = np.arctan(velocity_vector[1]/velocity_vector[2])
     velocity_module = np.linalg.norm(velocity_vector)
     Force = (np.pi/4)*rho*(velocity_module**2)*alpha*(tail_span**2)
     Lift = Force*np.cos(alpha)
     Cf = 1.328/np.sqrt(Reynolds)
-    Df = 0.5*rho*(velocity_module**2)*(tail_span*settings.tail_length/2)*Cf
+    Df = 0.5*rho*(velocity_module**2)*(tail_span*tail_length/2)*Cf
     Drag_ind = 0.5*Lift*alpha
     Drag = Drag_ind + Df + Force*np.sin(alpha)
     Lat_force = 0.
     return Lat_force, Lift, Drag
 
-def tail_geometry(length, **opening):
-    tail_opening=opening.get('tail_opening', settings.tail_opening)
+def tail_geometry(length, *, tail_opening, tail_position):
+    """Tail span, aspect ratio and neutral point for a given opening [rad]."""
     tail_span = 2*length*np.tan(tail_opening/2)
     AR_tail = 2*(tail_span/length)
-    NP_tail = settings.wingframe_position_tail + np.array([0., 0., (2/3)*length])
+    NP_tail = tail_position + np.array([0., 0., (2/3)*length])
     return tail_span, AR_tail, NP_tail
 
 
 if __name__ == "__main__":
-    [b, _, _] = tail_geometry(.25, tail_opening=np.deg2rad(40))
+    [b, _, _] = tail_geometry(.25, tail_opening=np.deg2rad(40),
+                              tail_position=np.array([0., 0., .3]))
     print(b)

@@ -24,21 +24,54 @@ limitations under the License.
 '''
 import numpy as np  # Import NumPy
 from .circulation import circulation, inucedvel_filament, inducedvel_segment
-from .TailModels import delta_tail, tail_geometry 
-from .settings import SimulationsSettings 
-settings = SimulationsSettings()
-def get_flappingforces(x0, v_kin, line, chordir, updir, chord):
+from .TailModels import delta_tail, tail_geometry
 
-    u, w, q, theta = x0
 
-    cl_alpha = 2*np.pi
-    rho = 1.225  # Air density
+def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
+                       updir, chord, *, wing_position, tail_position,
+                       tail_length, tail_opening, rho=1.225,
+                       cl_alpha=2*np.pi, kin_viscosity=1.5e-5,
+                       tail_reference_velocity=15, tol=0.001,
+                       max_iterations=50):
+    """Quasi-steady lifting-line forces on a wing, plus a tail.
 
-    U = np.array([0, w, u])
-    ang_velocity = np.array([q, 0, 0])
+    All vectors are expressed in the wing frame used by the lifting line.
 
-    wingframe_position = settings.wingframe_position
-    tail_frame_position = settings.wingframe_position_tail
+    Parameters
+    ----------
+    freestream : (3,) array
+        Velocity of the air relative to the body, far from the wing
+        (upstream bird model: ``[0, w, u]``).
+    angular_velocity : (3,) array
+        Angular velocity of the body (upstream bird model: ``[q, 0, 0]``).
+    v_kin : (3, n) array
+        Velocity of the lifting-line centre points due to the wing motion.
+    line, chordir, updir, chord : arrays
+        Lifting-line geometry (points, chord and up directions, chords).
+    wing_position : (3,) array
+        Position of the wing frame origin relative to the centre of mass.
+    tail_position : (3,) array
+        Position of the tail frame origin relative to the centre of mass.
+    tail_length : float
+        Tail length [m].
+    tail_opening : float
+        Tail opening angle [rad] (0: no tail surface).
+    rho : float
+        Air density [kg/m^3].
+    cl_alpha : float
+        Lift-curve slope of the wing sections [1/rad].
+    kin_viscosity : float
+        Kinematic viscosity of air [m^2/s] (tail skin friction).
+    tail_reference_velocity : float
+        Velocity [m/s] used for the tail Reynolds number.
+    tol, max_iterations : float, int
+        Convergence settings of the circulation iteration.
+    """
+    U = freestream
+    ang_velocity = angular_velocity
+
+    wingframe_position = wing_position
+    tail_frame_position = tail_position
     # -------------------------------------------------------------------------
     # Initialization of the vector force. It must have the same dimension of the time vector
     # -------------------------------------------------------------------------
@@ -89,8 +122,6 @@ def get_flappingforces(x0, v_kin, line, chordir, updir, chord):
         norm_velocity[j] = np.sqrt(np.sum(velocity_profile[:, j]*velocity_profile[:, j]))
         direction_velocity[:, j] = velocity_profile[:, j]/norm_velocity[j]
         angle_of_attack[j] = np.arctan2(np.sum(direction_velocity[:, j]*updir[:, j]), np.sum(direction_velocity[:, j]*chordir[:, j]))
-    tol = 0.001
-    max_iterations = 50
     ds = np.zeros(len(chord))
     s = np.zeros((np.size(line[0])))
 #    print(np.mean(np.rad2deg(angle_of_attack)))
@@ -136,7 +167,8 @@ def get_flappingforces(x0, v_kin, line, chordir, updir, chord):
 # =============================================================================
 #     Induced velocity on the tail
 # =============================================================================
-    [tail_span, AR_tail, NP_tail] = tail_geometry(settings.tail_length)
+    [tail_span, AR_tail, NP_tail] = tail_geometry(
+        tail_length, tail_opening=tail_opening, tail_position=tail_position)
     V_ind = 0
     dl_induced = line[:,1:] - line[:,:-1]
     for i in range (np.size(gamma)):
@@ -178,7 +210,9 @@ def get_flappingforces(x0, v_kin, line, chordir, updir, chord):
         M_lift = M_lift + M_lift_j[0]
         My = My + M[0]
 
-    F_tail_tot = delta_tail(U_tail, tail_span)
+    F_tail_tot = delta_tail(U_tail, tail_span, tail_length=tail_length,
+                            rho=rho, kin_viscosity=kin_viscosity,
+                            reference_velocity=tail_reference_velocity)
 
     M_tail = np.cross(NP_tail, F_tail_tot)
     My = M_wing + M_tail[0]

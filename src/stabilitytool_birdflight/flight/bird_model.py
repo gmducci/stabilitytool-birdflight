@@ -41,6 +41,7 @@ class BirdModel(BirdWing):
         self.tail_length = 0.25
         self.tail_chord = 0.15
         self.tail_opening = 0.
+        self.rho = 1.225  # air density [kg/m^3]
         super().__init__(shoulder=shoulder, elbow=elbow, wrist=wrist)
 
     # calling methods of BirdModel that are defined in other files
