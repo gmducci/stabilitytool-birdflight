@@ -7,7 +7,17 @@
 > - import name: `import stabilitytool_birdflight` (was `import multiflap`);
 > - install: `uv sync` (Python >= 3.11, numpy 1.26 and 2.x), or
 >   `pip install -e .`;
-> - run a bird case from its config file (YAML or JSON, angles in degrees):
+> - run a bird case from its config file (YAML or JSON, angles in degrees);
+>   the output directory gets the results, the resolved config and the
+>   provenance (code version, git commit, environment):
+>
+>   ```bash
+>   stabilitytool-birdflight validate examples/configs/bird_main.yaml
+>   stabilitytool-birdflight run examples/configs/bird_main.yaml --output runs/bird_main
+>   stabilitytool-birdflight show runs/bird_main
+>   ```
+>
+>   or from Python:
 >
 >   ```python
 >   from stabilitytool_birdflight.flight.config import BirdCaseConfig
@@ -19,7 +29,7 @@
 > - modules: `kinematics` (wing gait and geometry), `aerodynamics` (lifting
 >   line, tail), `dynamics` (multiple shooting, Floquet, Lyapunov), `flight`
 >   (couples them); the first three are independent of each other;
-> - tests: `uv run pytest`;
+> - tests: `uv run pytest` (fast); `uv run pytest -m slow` (bird, minutes);
 > - the scripts inside the package (`main.py`, `*_main.py`) run with
 >   `python -m stabilitytool_birdflight.main`, but still carry the upstream
 >   bugs (for example `main.py` fails after solving: `eigenvalues` undefined);

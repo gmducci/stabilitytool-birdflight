@@ -54,6 +54,30 @@ regression tolerance was relaxed from 1e-8 to 1e-6 accordingly; see
 
 ## [Unreleased]
 
+### Stage 5: run provenance
+
+- `stabilitytool-birdflight run CASE.yaml --output DIR` (also
+  `python -m stabilitytool_birdflight`, or `runs.run_bird_case` from Python)
+  writes a self-describing directory: `config.yaml` (fully resolved),
+  `input.<ext>` (verbatim copy), `result.npz` (`LimitCycleResult.from_npz`),
+  `summary.json` (results, error history, per-iteration times), 
+  `provenance.json` (package version, git commit and dirty flag, uv.lock
+  checksum, Python/dependency/BLAS versions, platform, threading variables,
+  command line, input and config checksums, timestamps, status) and
+  `solver.log`. No default location; non-empty directories are refused
+  unless `--overwrite`; failed runs are recorded (status `failed`,
+  `error.txt`). Host and user names are not recorded.
+- `stabilitytool-birdflight validate CASE.yaml [--print]` and
+  `stabilitytool-birdflight show DIR`.
+- Solvers record per-iteration wall times (`LimitCycleResult.iteration_times`).
+- No hard-coded paths and no bare `except:` left in the package. `SaveData`
+  needs an explicit results folder; its errors are raised; the wrist offset
+  and phase it writes are now correct (upstream wrote the amplitude).
+  `main.py` takes the output folder as argument and no longer crashes on the
+  undefined `eigenvalues`.
+- Slow test suite (`pytest -m slow`, excluded by default): bird_main end to
+  end from its config file.
+
 ### Stage 4: configuration files, model interface, result object
 
 - A bird case is fully specified by one YAML (or JSON) file with sections
