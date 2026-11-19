@@ -200,26 +200,57 @@ patterns would have been affected.
   preference: `uv`, `pip-tools` or conda `environment.yml`).
 - Fix the `\d` escape warnings.
 
-### Stage 3: explicit configuration
+Stages 3 and 4 were swapped on 2026-11-19 after the scope decision (Section
+6): the module split comes first, configuration second.
 
-- One validated configuration object (for example dataclasses, or pydantic if
-  the user agrees) covering the physical, kinematic, aerodynamic, tail and
-  numerical parameters. Loadable from and saveable to a file (TOML or YAML; ask).
+### Target architecture (decided 2026-11-19)
+
+A toolbox of independent, model-agnostic modules plus one coupling layer:
+
+- `dynamics`: nonlinear-dynamics methods (multiple shooting with known and
+  unknown period, Levenberg–Marquardt solver, Floquet multipliers, Lyapunov
+  exponent, integrators). Depends only on numpy/scipy. Toy systems live here
+  as examples.
+- `kinematics`: biomechanics. Joints and gaits, skeleton, feathers, forward
+  kinematics producing the wing geometry and its velocity at time t (lifting
+  line, chords, tip path, span, sweep). No aerodynamics.
+- `aerodynamics`: lifting-line solver and tail model. Input: a wing geometry,
+  its velocity, the free stream and angular velocity. Output: circulation,
+  angle of attack, forces, moments. Knows nothing about birds or flight
+  states.
+- `flight`: flight mechanics (longitudinal rigid-body equations, mass,
+  inertia). The only module that imports the others; it couples kinematics
+  and aerodynamics into a model the `dynamics` module can solve.
+
+Rule: `kinematics`, `aerodynamics` and `dynamics` never import each other.
+The user must be able to extract bird kinematics without flight mechanics.
+
+### Stage 3: module split with explicit parameters
+
+- Create the four modules above and move the code into them (moves in their
+  own commits, separate from logic changes).
+- Cut the coupling: `flapping_forces` takes a free-stream vector and angular
+  velocity instead of the flight state (u, w, q, θ); the wing velocity
+  (currently finite differences in `bird_dynamics.py`) is provided by
+  `kinematics`; `frequency` becomes a gait parameter instead of a module
+  constant in `bird.py`.
 - Remove the module-level `SimulationsSettings` and import-time computations.
   Every function receives its parameters explicitly.
 - Keep the default values identical to upstream so the baseline still passes.
 - Add a test that changing each parameter actually changes the forces it should
   affect (this guards against the bug in Section 4 coming back).
 
-### Stage 4: separate the solver from the models
+### Stage 4: configuration, model interface and results
 
-- A generic kernel (multiple shooting with known and unknown period, solver,
-  Floquet multipliers, Lyapunov exponent, integrators) with no dependency on the
-  bird code.
-- A clear model interface (for example a `Protocol` with `dynamics(x, t)`,
-  `dimension`, optional `jacobian(x, t)`), replacing the current
-  `dynamics`/`get_stability_matrix` naming convention if the user agrees.
-- The bird model and toy systems as models implementing that interface.
+- One validated configuration object per module (kinematics, aerodynamics,
+  flight, solver), composed for a bird case (dataclasses, or pydantic if the
+  user agrees). Loadable from and saveable to a file: YAML as the main format
+  (comments allowed), JSON also accepted; confirm with the user at the start of
+  the stage. The bird case must be fully specified by its config file.
+- A clear model interface for `dynamics` (for example a `Protocol` with
+  `dynamics(x, t)`, `dimension`, optional `jacobian(x, t)`), replacing the
+  current `dynamics`/`get_stability_matrix` naming convention if the user
+  agrees. The bird model and toy systems implement it.
 - Return a structured result object (period, trajectory, monodromy matrix,
   multipliers, eigenvectors, convergence history) instead of the current tuple
   indexed by position (`mysol[3]`, `mysol[4]`).
@@ -255,11 +286,19 @@ patterns would have been affected.
 
 ## 6. Decisions to ask the user about (do not decide alone)
 
-- **Scope**: should this stay a general-purpose limit-cycle toolbox that
-  includes a bird model, or become a bird-flight research code that uses its own
-  solver internally? This shapes Stages 3 and 4. Ask before starting Stage 3.
-- The project name (avoid simply reusing "multiflap"; see Section 7).
-- The environment and lockfile tool, and the config format.
+Decided:
+
+- **Scope** (2026-11-19): a toolbox aggregating aerodynamics, biomechanics
+  (kinematics) and nonlinear-dynamics methods, each module independent and
+  agnostic, with flight mechanics as the coupling layer. See "Target
+  architecture" in Section 5.
+- **Project name** (Stage 2): distribution `stabilitytool-birdflight`, import
+  package `stabilitytool_birdflight`.
+- **Environment** (Stage 2): uv with `uv.lock`; Python >= 3.11.
+- **Config format** (tentative, confirm in Stage 4): YAML, JSON also accepted.
+
+Still open:
+
 - Whether to keep `pdfs/`, `anim/` and the toy systems in the repository.
 - Any change to numerical results, including bug fixes (ground rule 2).
 - Whether to report the silently-ignored-parameter issue upstream.
@@ -283,3 +322,6 @@ The upstream code is Apache License 2.0 (see `LICENSE` and `NOTICE`). Therefore:
 - Use a non-interactive matplotlib backend (`MPLBACKEND=Agg`) when running
   examples or tests, so `plt.show()` does not block.
 - Toy systems take seconds. Use them for quick feedback on solver changes.
+- Environments: `.venv` is the uv project environment (numpy 2, `uv run ...`);
+  `.venv-baseline` is numpy 1.26 (upstream baseline and numpy-1.26 checks).
+  Regression check: `baseline/README.md`.
