@@ -10,3 +10,6 @@ multiflap/*.swp
 postprocessing
 
 results/*
+
+# Copyrighted papers, kept locally only (see CLAUDE.md)
+papers/
