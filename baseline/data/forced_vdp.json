@@ -1,0 +1,83 @@
+{
+  "case": "forced_vdp",
+  "description": "``examples/forced_van_der_pol.py`` with the hard-coded dim=4 overridden.",
+  "source": "examples/forced_van_der_pol.py",
+  "solver": "Solver (known period)",
+  "settings": {
+    "model": "ForcedVanDerPol",
+    "lam": 1.8,
+    "gamma": 0.5,
+    "delta": 4,
+    "x0": [
+      1.0,
+      1.0
+    ],
+    "M": 2,
+    "period": 10.4719755,
+    "t_steps": 4000,
+    "integrator": "rk4",
+    "option_jacobian": "numerical",
+    "tolerance": 1e-06,
+    "max_iterations": 100
+  },
+  "workarounds": [
+    "ms_obj.dim set to model.dimension (=2) after construction: MultipleShooting hard-codes dim=4"
+  ],
+  "results": {
+    "converged": true,
+    "n_iterations": 5,
+    "final_error": 6.976918265344523e-08,
+    "error_history": [
+      1.1900049449839165,
+      0.5127581777724349,
+      0.07061800375885108,
+      0.004922687599837161,
+      4.090025438752143e-05,
+      6.976918265344523e-08
+    ],
+    "period": 10.4719755,
+    "state_at_t0": [
+      1.53457323015267,
+      -0.18991305384513024
+    ],
+    "multipliers_sorted": [
+      {
+        "real": 0.39864701275043124,
+        "imag": 0.0,
+        "modulus": 0.39864701275043124
+      },
+      {
+        "real": 1.4241675814619557e-05,
+        "imag": 0.0,
+        "modulus": 1.4241675814619557e-05
+      }
+    ],
+    "monodromy": [
+      [
+        0.3815192705342367,
+        0.07301178306836233
+      ],
+      [
+        0.08949678413346923,
+        0.017141983892009147
+      ]
+    ],
+    "elapsed_s": 2.970177208073437
+  },
+  "provenance": {
+    "timestamp_utc": "2026-11-19T09:42:36.579482+00:00",
+    "repo_commit": "92065b1c45e36333547f5a1e06fc3c5005c7043c",
+    "repo_dirty": true,
+    "upstream_tag": "upstream-v1.1",
+    "upstream_github_commit": "67a29ecd78884cabfef1a0487dc418b599ef2e42",
+    "upstream_code_unmodified_vs_tag": true,
+    "python": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.2",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "openblas_num_threads": "1"
+  }
+}

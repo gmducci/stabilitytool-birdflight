@@ -1,0 +1,50 @@
+... Iteration i = 0
+Jacobian time  10.244110107421875
+Error vector is [-0.         -0.         -0.         -0.          0.21486159  0.07407049
+ -0.11989164 -0.19656681]
+... Iteration 0 time: 20.247413873672485
+... Iteration number i = 0 has error: 0.21486159443122688
+... Iteration i = 1
+Jacobian time  10.757784843444824
+Error vector is [ 0.06361209  0.00586263 -0.02942016 -0.04677746  0.13634527  0.03634212
+ -0.08431724 -0.15059211]
+... Iteration 1 time: 21.132193088531494
+... Iteration number i = 1 has error: 0.15059211425352956
+... Iteration i = 2
+Jacobian time  10.965008974075317
+Error vector is [ 0.02658702  0.00527585 -0.05020282 -0.08871901  0.03511829  0.00148086
+ -0.05349081 -0.10877844]
+... Iteration 2 time: 21.40329909324646
+... Iteration number i = 2 has error: 0.10877844050210783
+... Iteration i = 3
+Jacobian time  10.93212080001831
+Error vector is [ 0.00072867 -0.00272482 -0.0492029  -0.09097274  0.00093672 -0.00663679
+ -0.05029678 -0.09168914]
+... Iteration 3 time: 21.36554217338562
+... Iteration number i = 3 has error: 0.09168914074012763
+... Iteration i = 4
+Jacobian time  11.072670221328735
+Error vector is [ 0.0145994  -0.03229517 -0.02176892 -0.05345479 -0.00018408 -0.00772861
+ -0.04457719 -0.04985368]
+... Iteration 4 time: 21.79360795021057
+... Iteration number i = 4 has error: 0.05345478641899549
+... Iteration i = 5
+Jacobian time  11.530051708221436
+Error vector is [ 1.70902024e-02 -3.67277064e-02  2.19139182e-02 -8.79759731e-03
+  2.86227439e-05 -1.01425323e-03 -6.12178661e-03 -4.06102511e-03]
+... Iteration 5 time: 22.50880718231201
+... Iteration number i = 5 has error: 0.03672770636356093
+... Iteration i = 6
+Jacobian time  11.69353199005127
+Error vector is [ 5.98770262e-04 -1.83570641e-04  4.11773342e-04 -1.15345311e-04
+ -1.67787338e-07  2.04259296e-05  1.04142277e-04 -8.86940977e-05]
+... Iteration 6 time: 22.804206132888794
+... Iteration number i = 6 has error: 0.0005987702621226276
+... Iteration i = 7
+Jacobian time  11.703520059585571
+Error vector is [ 1.04633954e-06  3.68381117e-06  9.55839797e-07 -1.50072934e-07
+ -1.42978251e-09  7.85744501e-08  4.23796558e-07 -2.65929622e-07]
+... Iteration 7 time: 23.330850839614868
+... Iteration number i = 7 has error: 3.683811174770568e-06
+Iteration terminates at error : 3.683811174770568e-06
+Calculating Floquet Multipliers

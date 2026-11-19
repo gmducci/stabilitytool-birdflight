@@ -1,0 +1,102 @@
+{
+  "case": "rossler",
+  "description": "``examples/rossler_system.py`` up to the solve (plotting skipped).",
+  "source": "examples/rossler_system.py",
+  "solver": "SolverPeriod (unknown period)",
+  "settings": {
+    "model": "Rossler",
+    "a": 0.2,
+    "b": 0.2,
+    "c": 5.7,
+    "x0": [
+      0.1,
+      5.0,
+      3.6
+    ],
+    "M": 30,
+    "period_guess": 5.0,
+    "t_steps": 5000,
+    "integrator": "odeint",
+    "option_jacobian": "analytical",
+    "tolerance": 1e-05,
+    "max_iterations": 100
+  },
+  "workarounds": [
+    "plotting skipped (fig.gca(projection='3d') fails on current matplotlib)"
+  ],
+  "results": {
+    "converged": true,
+    "n_iterations": 10,
+    "final_error": 1.2966374640654976e-08,
+    "error_history": [
+      7.351503919899395,
+      4.224819993801908,
+      1.182141355327846,
+      0.30812327074639345,
+      0.14225070154879393,
+      0.24899431896497237,
+      0.02345018367708393,
+      0.014954120015234551,
+      0.004390710973014578,
+      6.87705391086979e-05,
+      1.2966374640654976e-08
+    ],
+    "period": 5.881088558798985,
+    "state_at_t0": [
+      4.038272797165349,
+      4.804187216631768,
+      6.630656756075096
+    ],
+    "multipliers_sorted": [
+      {
+        "real": -2.4039542747158653,
+        "imag": 0.0,
+        "modulus": 2.4039542747158653
+      },
+      {
+        "real": 0.9999998192171315,
+        "imag": 0.0,
+        "modulus": 0.9999998192171315
+      },
+      {
+        "real": -1.2720063630386887e-14,
+        "imag": 0.0,
+        "modulus": 1.2720063630386887e-14
+      }
+    ],
+    "monodromy": [
+      [
+        -0.31629650860823433,
+        -3.297115895890662,
+        -0.13227500709448903
+      ],
+      [
+        -0.7816226669691407,
+        -0.26796778423805195,
+        0.24024240569875727
+      ],
+      [
+        3.203306427131713,
+        3.3892587201050914,
+        -0.819690162652459
+      ]
+    ],
+    "elapsed_s": 1.6768440420273691
+  },
+  "provenance": {
+    "timestamp_utc": "2026-11-19T09:42:35.407216+00:00",
+    "repo_commit": "92065b1c45e36333547f5a1e06fc3c5005c7043c",
+    "repo_dirty": true,
+    "upstream_tag": "upstream-v1.1",
+    "upstream_github_commit": "67a29ecd78884cabfef1a0487dc418b599ef2e42",
+    "upstream_code_unmodified_vs_tag": true,
+    "python": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.2",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "openblas_num_threads": "1"
+  }
+}

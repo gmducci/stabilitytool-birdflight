@@ -1,0 +1,111 @@
+{
+  "case": "redox",
+  "description": "``examples/redox_oscillator.py`` up to the solve (SaveData/plots skipped).",
+  "source": "examples/redox_oscillator.py",
+  "solver": "SolverPeriod (unknown period)",
+  "settings": {
+    "model": "RedoxModel",
+    "model_params": "defaults (a=1000, b=2, c=10000, d=0.2, e=0.1, q=0.1, p=1)",
+    "x0": [
+      0.5,
+      0.5,
+      0.6,
+      0.2
+    ],
+    "M": 2,
+    "period_guess": 23.0,
+    "t_steps": 90000,
+    "integrator": "odeint",
+    "option_jacobian": "analytical",
+    "tolerance": 1e-05,
+    "max_iterations": 100
+  },
+  "workarounds": [
+    "SaveData and plotting skipped (hard-coded relative results path)"
+  ],
+  "results": {
+    "converged": true,
+    "n_iterations": 5,
+    "final_error": 9.7546394559056e-07,
+    "error_history": [
+      0.4844656569311059,
+      0.223349467526956,
+      0.03053978131971375,
+      0.006390750370859233,
+      0.0006973253093539578,
+      9.7546394559056e-07
+    ],
+    "period": 24.952562311040655,
+    "state_at_t0": [
+      0.007631825331621021,
+      0.5923538919409581,
+      0.5911210959175697,
+      0.13103979094361554
+    ],
+    "multipliers_sorted": [
+      {
+        "real": 0.9999975246933164,
+        "imag": 0.0,
+        "modulus": 0.9999975246933164
+      },
+      {
+        "real": 0.2777897982424688,
+        "imag": 0.0,
+        "modulus": 0.2777897982424688
+      },
+      {
+        "real": 4.9593423131093614e-08,
+        "imag": 0.0,
+        "modulus": 4.9593423131093614e-08
+      },
+      {
+        "real": -5.1710898208732006e-18,
+        "imag": 0.0,
+        "modulus": 5.1710898208732006e-18
+      }
+    ],
+    "monodromy": [
+      [
+        0.00030527027027695876,
+        0.027653852227426303,
+        0.005060074651096697,
+        -0.00026361097922918727
+      ],
+      [
+        0.009325183064701132,
+        0.9992441856498158,
+        1.498781990532896,
+        -0.00783327639164384
+      ],
+      [
+        -0.0003702056808886728,
+        -0.0013696848850084107,
+        0.27375296536953586,
+        0.0003653502523713736
+      ],
+      [
+        -0.0051930598321322935,
+        -0.4700263094345812,
+        -0.0825713371109967,
+        0.004484951239579679
+      ]
+    ],
+    "elapsed_s": 1.4935924168676138
+  },
+  "provenance": {
+    "timestamp_utc": "2026-11-19T09:42:35.216544+00:00",
+    "repo_commit": "92065b1c45e36333547f5a1e06fc3c5005c7043c",
+    "repo_dirty": true,
+    "upstream_tag": "upstream-v1.1",
+    "upstream_github_commit": "67a29ecd78884cabfef1a0487dc418b599ef2e42",
+    "upstream_code_unmodified_vs_tag": true,
+    "python": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.2",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "openblas_num_threads": "1"
+  }
+}

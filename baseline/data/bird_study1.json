@@ -1,0 +1,125 @@
+{
+  "case": "bird_study1",
+  "description": "study_1 reference case (Sect. 4.1, Tables 1-2) as closely as the code allows.",
+  "source": "study_1 Sect. 4.1 / Table 1 (A_s,x = 42 deg) / Table 2 (M=5, 150 time steps per period, RK4, tolerance 1e-5)",
+  "solver": "Solver (known period)",
+  "settings": {
+    "model": "BirdModel (defaults: mass=1.2, Iyy=0.1 hard-coded, f=4 Hz, wingframe_position=[0,0,-0.05], tail_opening=0)",
+    "joints_Joint_offset_amplitude_phase_rad": {
+      "shoulder.axis_x": "Joint(0.2, 0.014, -pi/2)",
+      "shoulder.axis_y": "Joint(-deg2rad(19), deg2rad(20), pi/2)",
+      "shoulder.axis_z": "Joint(0, deg2rad(42), pi)",
+      "elbow.axis_x": "Joint(0, pi/6, -pi/2)",
+      "elbow.axis_y": "Joint(pi/6, pi/6, -pi/2)",
+      "wrist.axis_y": "Joint(-pi/6, pi/6, pi/2)",
+      "wrist.axis_z": "Joint(0, 0, 0)"
+    },
+    "x0": [
+      16.5,
+      0.5,
+      0.5,
+      0.0
+    ],
+    "M": 5,
+    "period": 0.25,
+    "t_steps": 38,
+    "integrator": "rk4 (trajectory), rk2 with Nt=30 per interval (variational eq., hard-coded)",
+    "option_jacobian": "analytical",
+    "tolerance": 1e-05,
+    "max_iterations": 100
+  },
+  "workarounds": [
+    "eigenvalues computed here from mysol[4] (main.py uses an undefined name `eigenvalues`)",
+    "SaveData skipped"
+  ],
+  "note": "Table 2 asks for 150 time steps per period. In upstream MultipleShooting each of the M-1 = 4 intervals is integrated on linspace(t, t+tau, t_steps), i.e. t_steps-1 RK4 steps, so exactly 150 is impossible; t_steps=38 gives 4*37 = 148 steps per period. Joint values other than A_s,x are those of main.py; see baseline/README.md for the mapping to Table 1 and the discrepancies found.",
+  "results": {
+    "converged": true,
+    "n_iterations": 9,
+    "final_error": 3.612348673069643e-06,
+    "error_history": [
+      0.9507414466580237,
+      0.5214442723635399,
+      0.10509875009647884,
+      0.04775223604807642,
+      0.04186037667988692,
+      0.056045702482627746,
+      0.0189787652950463,
+      0.016989159267559714,
+      0.003356656882623807,
+      3.612348673069643e-06
+    ],
+    "period": 0.25,
+    "state_at_t0": [
+      18.067495233480784,
+      -1.9975968715370909,
+      -0.11246062603113859,
+      -0.11714708337726168
+    ],
+    "multipliers_sorted": [
+      {
+        "real": 1.4095482803598154,
+        "imag": 0.0,
+        "modulus": 1.4095482803598154
+      },
+      {
+        "real": 0.8243960552762907,
+        "imag": 0.26236708439892015,
+        "modulus": 0.8651389153951514
+      },
+      {
+        "real": 0.8243960552762907,
+        "imag": -0.26236708439892015,
+        "modulus": 0.8651389153951514
+      },
+      {
+        "real": 0.19829438740900995,
+        "imag": 0.0,
+        "modulus": 0.19829438740900995
+      }
+    ],
+    "monodromy": [
+      [
+        0.905592842944148,
+        0.020275535299831837,
+        0.08867205305084538,
+        -2.316664360027911
+      ],
+      [
+        -0.2635660068416945,
+        0.6058826147040312,
+        2.218377367177654,
+        0.4823602506702973
+      ],
+      [
+        -0.027225912136686275,
+        0.0990529181733444,
+        0.7364641363633825,
+        0.0030909252636797486
+      ],
+      [
+        -0.007736625042084625,
+        0.040810069329171354,
+        0.24593207177470036,
+        1.0086951843098473
+      ]
+    ],
+    "elapsed_s": 784.4771535410546
+  },
+  "provenance": {
+    "timestamp_utc": "2026-11-19T09:55:38.311080+00:00",
+    "repo_commit": "92065b1c45e36333547f5a1e06fc3c5005c7043c",
+    "repo_dirty": true,
+    "upstream_tag": "upstream-v1.1",
+    "upstream_github_commit": "67a29ecd78884cabfef1a0487dc418b599ef2e42",
+    "upstream_code_unmodified_vs_tag": true,
+    "python": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.2",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "openblas_num_threads": "1"
+  }
+}

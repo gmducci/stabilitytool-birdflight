@@ -1,0 +1,38 @@
+... Iteration i = 0
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-0.         -0.         -0.53418207  1.19000494]
+... Iteration 0 time: 0.2759511470794678
+... Iteration number i = 0 has error: 1.1900049449839165
+... Iteration i = 1
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-0.05681193  0.17537678 -0.22253068  0.51275818]
+... Iteration 1 time: 0.2506740093231201
+... Iteration number i = 1 has error: 0.5127581777724349
+... Iteration i = 2
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-0.04932627  0.070618   -0.0228882   0.05611117]
+... Iteration 2 time: 0.2263031005859375
+... Iteration number i = 2 has error: 0.07061800375885108
+... Iteration i = 3
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-0.00492269  0.00201782 -0.00217236  0.0009064 ]
+... Iteration 3 time: 0.22890782356262207
+... Iteration number i = 3 has error: 0.004922687599837161
+... Iteration i = 4
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-4.09002544e-05  7.42206506e-06 -3.20938240e-05 -1.82169381e-06]
+... Iteration 4 time: 0.22716188430786133
+... Iteration number i = 4 has error: 4.090025438752143e-05
+... Iteration i = 5
+... Running jacobian Function
+... jacobian Calculated
+Error vector is [-6.97691827e-08 -1.77122908e-08 -3.34840891e-08 -4.30447286e-09]
+... Iteration 5 time: 0.22461700439453125
+... Iteration number i = 5 has error: 6.976918265344523e-08
+Iteration terminates at error : 6.976918265344523e-08
+Calculating Floquet Multipliers

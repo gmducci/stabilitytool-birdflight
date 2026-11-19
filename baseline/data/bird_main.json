@@ -1,0 +1,122 @@
+{
+  "case": "bird_main",
+  "description": "``multiflap/main.py`` as-is (A = 44 deg, x0 = [18, .5, .1, .01], M=2, 70 steps).",
+  "source": "multiflap/main.py",
+  "solver": "Solver (known period)",
+  "settings": {
+    "model": "BirdModel (defaults: mass=1.2, Iyy=0.1 hard-coded, f=4 Hz, wingframe_position=[0,0,-0.05], tail_opening=0)",
+    "joints_Joint_offset_amplitude_phase_rad": {
+      "shoulder.axis_x": "Joint(0.2, 0.014, -pi/2)",
+      "shoulder.axis_y": "Joint(-deg2rad(19), deg2rad(20), pi/2)",
+      "shoulder.axis_z": "Joint(0, deg2rad(44), pi)",
+      "elbow.axis_x": "Joint(0, pi/6, -pi/2)",
+      "elbow.axis_y": "Joint(pi/6, pi/6, -pi/2)",
+      "wrist.axis_y": "Joint(-pi/6, pi/6, pi/2)",
+      "wrist.axis_z": "Joint(0, 0, 0)"
+    },
+    "x0": [
+      18.0,
+      0.5,
+      0.1,
+      0.01
+    ],
+    "M": 2,
+    "period": 0.25,
+    "t_steps": 70,
+    "integrator": "rk4 (trajectory), rk2 with Nt=30 per interval (variational eq., hard-coded)",
+    "option_jacobian": "analytical",
+    "tolerance": 1e-05,
+    "max_iterations": 100
+  },
+  "workarounds": [
+    "eigenvalues computed here from mysol[4] (main.py uses an undefined name `eigenvalues`)",
+    "SaveData skipped"
+  ],
+  "results": {
+    "converged": true,
+    "n_iterations": 7,
+    "final_error": 3.683811174770568e-06,
+    "error_history": [
+      0.21486159443122688,
+      0.15059211425352956,
+      0.10877844050210783,
+      0.09168914074012763,
+      0.05345478641899549,
+      0.03672770636356093,
+      0.0005987702621226276,
+      3.683811174770568e-06
+    ],
+    "period": 0.25,
+    "state_at_t0": [
+      18.67011188038536,
+      -2.1509164331147623,
+      -0.12073055983995179,
+      -0.11611310346937331
+    ],
+    "multipliers_sorted": [
+      {
+        "real": 1.4011037153589048,
+        "imag": 0.0,
+        "modulus": 1.4011037153589048
+      },
+      {
+        "real": 0.818858015936226,
+        "imag": 0.2639310060768383,
+        "modulus": 0.8603418077902204
+      },
+      {
+        "real": 0.818858015936226,
+        "imag": -0.2639310060768383,
+        "modulus": 0.8603418077902204
+      },
+      {
+        "real": 0.19909331329552765,
+        "imag": 0.0,
+        "modulus": 0.19909331329552765
+      }
+    ],
+    "monodromy": [
+      [
+        0.9017073186929454,
+        0.019323693373420617,
+        0.10616744255267782,
+        -2.3132129158966044
+      ],
+      [
+        -0.2686226322281734,
+        0.6186443149525166,
+        2.261178387859696,
+        0.4806468004519446
+      ],
+      [
+        -0.026510904193054425,
+        0.09453396554026225,
+        0.7087007872817231,
+        -0.0020868414179018146
+      ],
+      [
+        -0.008274043588980677,
+        0.04145547148179135,
+        0.24478413676249405,
+        1.0088606395996982
+      ]
+    ],
+    "elapsed_s": 260.0741484169848
+  },
+  "provenance": {
+    "timestamp_utc": "2026-11-19T09:46:53.947650+00:00",
+    "repo_commit": "92065b1c45e36333547f5a1e06fc3c5005c7043c",
+    "repo_dirty": true,
+    "upstream_tag": "upstream-v1.1",
+    "upstream_github_commit": "67a29ecd78884cabfef1a0487dc418b599ef2e42",
+    "upstream_code_unmodified_vs_tag": true,
+    "python": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.2",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "openblas_num_threads": "1"
+  }
+}
