@@ -278,7 +278,7 @@ def provenance():
     return dict(
         timestamp_utc=_dt.datetime.now(_dt.timezone.utc).isoformat(),
         repo_commit=_git("rev-parse", "HEAD"),
-        repo_dirty=bool(_git("status", "--porcelain")),
+        repo_dirty=bool(_git("status", "--porcelain", "--untracked-files=no")),
         upstream_tag=UPSTREAM_TAG,
         upstream_github_commit=UPSTREAM_COMMIT,
         upstream_code_unmodified_vs_tag=upstream_unmodified,
