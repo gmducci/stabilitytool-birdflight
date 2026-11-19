@@ -1,5 +1,13 @@
 #!/usr/bin/env python
-"""Stage 1: record reference outputs from the UNMODIFIED upstream multiflap code.
+"""Run the baseline cases against the upstream code or against the package.
+
+``--target upstream`` (default) records the Stage 1 reference outputs from the
+UNMODIFIED upstream multiflap code: the tag ``upstream-v1.1`` is extracted with
+``git archive`` into a temporary directory and imported from there, so the
+working tree does not matter. ``--target package`` runs the same cases against
+the refactored ``stabilitytool_birdflight`` package (as installed, or from
+``src/``) and writes the same file format, for comparison with
+``compare_baseline.py``.
 
 This script never edits upstream source files. Everything needed to make the
 upstream code run (computing eigenvalues that ``main.py`` forgets to compute,
@@ -14,6 +22,7 @@ Usage (from the repository root)::
     python baseline/generate_baseline.py                       # all default cases
     python baseline/generate_baseline.py --cases rossler redox
     python baseline/generate_baseline.py --out some/dir --jobs 4
+    python baseline/generate_baseline.py --target package --jobs 6
 
 For each case ``<name>`` the output directory receives:
 
@@ -36,8 +45,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-UPSTREAM_PKG = REPO / "multiflap"
-DEFAULT_OUT = REPO / "baseline" / "data"
+DEFAULT_OUT = {"upstream": REPO / "baseline" / "data",
+               "package": REPO / "baseline" / "runs" / "candidate"}
+PACKAGE = "stabilitytool_birdflight"
+# Set by the driver for worker subprocesses.
+ENV_TARGET = "BASELINE_TARGET"
+ENV_UPSTREAM_DIR = "BASELINE_UPSTREAM_DIR"
 UPSTREAM_TAG = "upstream-v1.1"
 UPSTREAM_COMMIT = "67a29ecd78884cabfef1a0487dc418b599ef2e42"
 
@@ -51,9 +64,28 @@ UPSTREAM_COMMIT = "67a29ecd78884cabfef1a0487dc418b599ef2e42"
 #     (x, ptlist, error, complete_solution, jac_sg)
 # ---------------------------------------------------------------------------
 
+def _target():
+    return os.environ.get(ENV_TARGET, "upstream")
+
+
+def _upstream_dir():
+    return Path(os.environ[ENV_UPSTREAM_DIR])
+
+
+def _ensure_package_importable():
+    try:
+        import stabilitytool_birdflight  # noqa: F401
+    except ImportError:
+        sys.path.insert(0, str(REPO / "src"))
+
+
 def _toy_import():
-    """Import the upstream package the way the examples do (``import multiflap``)."""
-    sys.path.insert(0, str(REPO))
+    """Toy systems: ``import multiflap as mf`` (upstream) or the package."""
+    if _target() == "package":
+        _ensure_package_importable()
+        import stabilitytool_birdflight as mf
+        return mf
+    sys.path.insert(0, str(_upstream_dir()))
     import multiflap as mf
     return mf
 
@@ -65,9 +97,17 @@ def _bird_import():
     (``from ms_package...``, ``from odes...``), so ``multiflap/`` must be on
     ``sys.path``. We also chdir there to mimic running ``python main.py``.
     """
-    sys.path.insert(0, str(UPSTREAM_PKG))
-    os.chdir(UPSTREAM_PKG)
     import numpy as np
+    if _target() == "package":
+        _ensure_package_importable()
+        from stabilitytool_birdflight.ms_package.multiple_shooting import MultipleShooting
+        from stabilitytool_birdflight.ms_package.lma_solver import Solver
+        from stabilitytool_birdflight.aero_package.bird_model import BirdModel
+        from stabilitytool_birdflight.aero_package.bird import Shoulder, Elbow, Wrist, Joint
+        return np, MultipleShooting, Solver, BirdModel, Shoulder, Elbow, Wrist, Joint
+    upstream_pkg = _upstream_dir() / "multiflap"
+    sys.path.insert(0, str(upstream_pkg))
+    os.chdir(upstream_pkg)
     from ms_package.multiple_shooting import MultipleShooting
     from ms_package.lma_solver import Solver
     from aero_package.bird_model import BirdModel
@@ -272,16 +312,22 @@ def _git(*args):
 
 def provenance():
     import numpy, scipy, matplotlib
-    upstream_unmodified = subprocess.run(
-        ["git", "diff", "--quiet", UPSTREAM_TAG, "--", "multiflap", "examples",
-         "setup.py"], cwd=REPO).returncode == 0
+    target = _target()
+    if target == "package":
+        import stabilitytool_birdflight as pkg
+        code = dict(target="package",
+                    package_version=getattr(pkg, "__version__", None),
+                    package_path=str(Path(pkg.__file__).parent))
+    else:
+        code = dict(target="upstream",
+                    upstream_source=f"git archive {UPSTREAM_TAG}")
     return dict(
+        **code,
         timestamp_utc=_dt.datetime.now(_dt.timezone.utc).isoformat(),
         repo_commit=_git("rev-parse", "HEAD"),
         repo_dirty=bool(_git("status", "--porcelain", "--untracked-files=no")),
         upstream_tag=UPSTREAM_TAG,
         upstream_github_commit=UPSTREAM_COMMIT,
-        upstream_code_unmodified_vs_tag=upstream_unmodified,
         python=sys.version,
         numpy=numpy.__version__,
         scipy=scipy.__version__,
@@ -370,9 +416,19 @@ def run_worker(name, out_dir):
 # Driver
 # ---------------------------------------------------------------------------
 
-def _launch(name, out_dir, timeout):
+def _extract_upstream(dest):
+    """Extract the upstream tag into ``dest`` (only multiflap/ is needed)."""
+    archive = subprocess.run(["git", "archive", UPSTREAM_TAG, "multiflap"],
+                             cwd=REPO, capture_output=True, check=True).stdout
+    subprocess.run(["tar", "-x", "-C", str(dest)], input=archive, check=True)
+
+
+def _launch(name, out_dir, timeout, target, upstream_dir):
     env = dict(os.environ, MPLBACKEND="Agg", OPENBLAS_NUM_THREADS="1",
                OMP_NUM_THREADS="1", PYTHONDONTWRITEBYTECODE="1")
+    env[ENV_TARGET] = target
+    if upstream_dir is not None:
+        env[ENV_UPSTREAM_DIR] = str(upstream_dir)
     cmd = [sys.executable, str(Path(__file__).resolve()), "--worker", name,
            "--out", str(out_dir)]
     t0 = time.perf_counter()
@@ -396,7 +452,12 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--cases", nargs="+", default=DEFAULT_CASES,
                    choices=sorted(CASES))
-    p.add_argument("--out", default=str(DEFAULT_OUT))
+    p.add_argument("--target", choices=["upstream", "package"],
+                   default="upstream",
+                   help="code to run: the upstream tag (default) or the package")
+    p.add_argument("--out", default=None,
+                   help="output directory (default: baseline/data for "
+                        "upstream, baseline/runs/candidate for package)")
     p.add_argument("--jobs", type=int, default=1,
                    help="number of cases to run in parallel")
     p.add_argument("--timeout", type=float, default=None,
@@ -404,16 +465,24 @@ def main(argv=None):
     p.add_argument("--worker", help=argparse.SUPPRESS)
     args = p.parse_args(argv)
 
-    out_dir = Path(args.out).resolve()
+    out_dir = Path(args.out or DEFAULT_OUT[args.target]).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.worker:
         run_worker(args.worker, out_dir)
         return 0
 
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        results = list(pool.map(lambda n: _launch(n, out_dir, args.timeout),
-                                args.cases))
+    with contextlib.ExitStack() as stack:
+        upstream_dir = None
+        if args.target == "upstream":
+            import tempfile
+            upstream_dir = Path(stack.enter_context(
+                tempfile.TemporaryDirectory(prefix="upstream-v1.1-")))
+            _extract_upstream(upstream_dir)
+        with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+            results = list(pool.map(
+                lambda n: _launch(n, out_dir, args.timeout, args.target,
+                                  upstream_dir), args.cases))
     failed = [n for n, s in results if s != "ok"]
     if failed:
         print("Failed cases:", ", ".join(failed))

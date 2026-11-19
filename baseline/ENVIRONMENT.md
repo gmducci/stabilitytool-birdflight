@@ -21,17 +21,26 @@ upstream code** (tag `upstream-v1.1`, upstream GitHub commit
 | matplotlib | 3.11.2  |
 
 Full list of installed packages: `baseline/requirements-baseline.txt`.
-The upstream package is **not** installed; the generator puts the repository
-root (toy systems, `import multiflap`) or `multiflap/` (bird model, like
-`main.py`) on `sys.path`.
+The upstream package is **not** installed; the generator extracts the
+`upstream-v1.1` tag to a temporary directory and puts it (toy systems,
+`import multiflap`) or its `multiflap/` folder (bird model, like `main.py`) on
+`sys.path`.
 
 ## Recreate
 
+Since Stage 2 the baseline environment lives in `.venv-baseline` (`.venv` is
+the uv project environment, see the top-level README).
+
 ```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python -r baseline/requirements-baseline.txt
-.venv/bin/python baseline/generate_baseline.py --out baseline/data --jobs 4
+uv venv --python 3.12 .venv-baseline
+uv pip install --python .venv-baseline/bin/python -r baseline/requirements-baseline.txt
+.venv-baseline/bin/python baseline/generate_baseline.py --out baseline/data --jobs 6
 ```
+
+The upstream code is taken from the `upstream-v1.1` tag with `git archive`, so
+this works from any checkout. `.venv-baseline` is also the numpy 1.26 test
+environment for the package (`--target package` imports it from `src/` when it
+is not installed).
 
 ## Run settings
 
@@ -42,6 +51,7 @@ Every case runs in a fresh subprocess with:
   involved, so this should not affect results; set for determinism)
 - `PYTHONDONTWRITEBYTECODE=1`
 
-Each `<case>.json` also records these versions, the repository commit, a
-dirty-tree flag and a check that `multiflap/`, `examples/` and `setup.py` are
-identical to the `upstream-v1.1` tag.
+Each `<case>.json` also records these versions, the repository commit and a
+dirty-tree flag. The Stage 1 files additionally record
+`upstream_code_unmodified_vs_tag: true`; since Stage 2 the generator records
+`target` and `upstream_source` instead.

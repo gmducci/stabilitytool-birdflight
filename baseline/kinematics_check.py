@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """Realism check of the bird kinematics and aerodynamics on a baseline limit cycle.
 
-Evaluates the UNMODIFIED upstream bird model along a converged limit cycle
-stored in ``baseline/data/<case>.npz`` and reports descriptors that can be
+Evaluates the bird model (package ``stabilitytool_birdflight``, which must
+reproduce the upstream baseline) along a converged limit cycle stored in ``baseline/data/<case>.npz`` and reports descriptors that can be
 compared with bird-flight benchmarks: flight-path angle, body pitch, airspeed,
 stroke amplitude, Strouhal number, wing flexion, downstroke fraction,
 effective angle of attack and the split of weight support between downstroke
 and upstroke. See the "Kinematics realism check" section of baseline/README.md.
 
-No upstream file is edited. The only intervention is a wrapper around
+No source file is edited. The only intervention is a wrapper around
 ``aero_package.flapping_forces.circulation`` that records the angle of attack
 and circulation of the last lifting-line iteration (upstream computes them but
 does not return them).
@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -43,8 +42,8 @@ WINGFRAME_POSITION = np.array([0.0, 0.0, -0.05])  # upstream default, code frame
 
 
 def build_bird(amplitude_deg):
-    from aero_package.bird_model import BirdModel
-    from aero_package.bird import Shoulder, Elbow, Wrist, Joint
+    from stabilitytool_birdflight.aero_package.bird_model import BirdModel
+    from stabilitytool_birdflight.aero_package.bird import Shoulder, Elbow, Wrist, Joint
     d = np.deg2rad
     shoulder = Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
                         axis_y=Joint(-d(19), d(20), np.pi / 2),
@@ -57,9 +56,11 @@ def build_bird(amplitude_deg):
 
 
 def analyse(case, n_samples):
-    sys.path.insert(0, str(REPO / "multiflap"))
-    os.chdir(REPO / "multiflap")
-    import aero_package.flapping_forces as ff
+    try:
+        import stabilitytool_birdflight  # noqa: F401
+    except ImportError:  # not installed: use the source tree
+        sys.path.insert(0, str(REPO / "src"))
+    import stabilitytool_birdflight.aero_package.flapping_forces as ff
 
     captured = {}
     original = ff.circulation

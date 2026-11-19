@@ -12,9 +12,19 @@ tolerances below (CLAUDE.md, ground rule 1).
 - `data/`: one `<case>.npz` (arrays), `<case>.json` (readable summary with
   settings and provenance) and `<case>.log` (upstream console output) per case.
 
+Check the package against the baseline (writes to `baseline/runs/candidate`,
+which is git-ignored):
+
 ```bash
-.venv/bin/python baseline/generate_baseline.py --out /tmp/candidate --jobs 6
-.venv/bin/python baseline/compare_baseline.py /tmp/candidate
+uv run python baseline/generate_baseline.py --target package --jobs 6
+uv run python baseline/compare_baseline.py baseline/runs/candidate
+```
+
+The same with numpy 1.26 (the baseline environment, see `ENVIRONMENT.md`):
+
+```bash
+.venv-baseline/bin/python baseline/generate_baseline.py --target package --out baseline/runs/candidate-np126 --jobs 6
+.venv-baseline/bin/python baseline/compare_baseline.py baseline/runs/candidate-np126
 ```
 
 ## Stored fields (`<case>.npz`)
@@ -171,13 +181,13 @@ Observations:
 
 ## Kinematics realism check
 
-`kinematics_check.py` evaluates the unmodified bird model along a stored limit
-cycle (default `bird_study1`, 40 samples per period) and reports kinematic and
+`kinematics_check.py` evaluates the bird model (since Stage 2 the package,
+which reproduces the upstream baseline) along a stored limit cycle (default `bird_study1`, 40 samples per period) and reports kinematic and
 aerodynamic descriptors in the paper's body frame. Output for `bird_study1`:
 `diagnostics/kinematics_bird_study1.json`.
 
 ```bash
-.venv/bin/python baseline/kinematics_check.py --json baseline/diagnostics/kinematics_bird_study1.json
+uv run python baseline/kinematics_check.py --json baseline/diagnostics/kinematics_bird_study1.json
 ```
 
 ### Consistent with cruising flight of a large bird
