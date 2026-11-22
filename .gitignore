@@ -19,3 +19,7 @@ papers/
 baseline/runs/
 .venv-baseline/
 .venv-np126/
+
+# macOS metadata and the upstream archive this repo was created from
+.DS_Store
+multiflap-master.zip
