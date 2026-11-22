@@ -29,10 +29,11 @@
 > - modules: `kinematics` (wing gait and geometry), `aerodynamics` (lifting
 >   line, tail), `dynamics` (multiple shooting, Floquet, Lyapunov), `flight`
 >   (couples them); the first three are independent of each other;
-> - tests: `uv run pytest` (fast); `uv run pytest -m slow` (bird, minutes);
+> - tests: `uv run pytest` (fast suite, seconds); `uv run pytest -m slow`
+>   (the three baseline bird cases end to end, about 15 min); continuous
+>   integration in `.github/workflows/tests.yml`;
 > - the scripts inside the package (`main.py`, `*_main.py`) run with
->   `python -m stabilitytool_birdflight.main`, but still carry the upstream
->   bugs (for example `main.py` fails after solving: `eigenvalues` undefined);
+>   `python -m stabilitytool_birdflight.main` (to be replaced by examples);
 > - reference outputs and the regression check: `baseline/README.md`;
 > - changes: `CHANGELOG.md`.
 >

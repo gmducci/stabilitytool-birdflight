@@ -54,6 +54,36 @@ regression tolerance was relaxed from 1e-8 to 1e-6 accordingly; see
 
 ## [Unreleased]
 
+### Stage 6: tests and continuous integration
+
+- `tests/hopf.py`: a test system (Hopf normal form plus a stable direction)
+  whose limit cycle, period, Floquet multipliers and flow map are known in
+  closed form.
+- Fast suite (about 90 tests, seconds): analytical Jacobians of every toy
+  system against central differences; order of accuracy of `rk2`, `rk3`,
+  `rk4`; interval Jacobians (variational and finite-difference) against
+  the exact flow map; unknown- and known-period solvers against the exact
+  period and multipliers; non-convergence reporting. Tolerances record the
+  accuracy of the upstream algorithms as they are.
+- Slow suite (`pytest -m slow`): all three baseline bird cases end to end
+  from their config files (`bird_main`, `bird_study1`,
+  `bird_a42_main_numerics`), including period and trajectory times.
+- GitHub Actions (`.github/workflows/tests.yml`): fast suite on Python
+  3.11-3.14 with the locked dependencies and on the lowest declared
+  dependencies (numpy 1.26.4, scipy 1.17.1, matplotlib 3.11.2); slow suite
+  nightly and on demand.
+- Found by the tests (upstream behaviour, unchanged, recorded as strict
+  `xfail`): `Torus.get_stability_matrix` is unfinished and returns `None`;
+  the finite-difference interval Jacobians perturb each coordinate by
+  `x[j]*epsilon`, so a coordinate that is exactly zero gives NaN (and a
+  very small one a step dominated by roundoff).
+- Measured (upstream behaviour, unchanged): the known-period analytical
+  monodromy, integrated with RK2 on 30 points per shooting interval, is
+  accurate to about 3e-3 on the unit multiplier with 4 shooting points
+  (1e-2 with 2), against 1e-5 for the unknown-period one (500 points).
+  With 2 shooting points the known-period solver stalls near
+  max|E| = 1e-7 on the test system.
+
 ### Stage 5: run provenance
 
 - `stabilitytool-birdflight run CASE.yaml --output DIR` (also

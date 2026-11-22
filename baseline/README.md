@@ -204,6 +204,12 @@ Observations:
    tested yet: the feather lengths, the RK2 monodromy integration, or
    upstream code changes after publication. (The shoulder-z offset is not a
    candidate: it is the same in code and paper, see above.)
+5. Stage 6 measured the accuracy of the known-period monodromy on a test
+   system with exact multipliers (`tests/test_exact_limit_cycle.py`): RK2
+   with 30 points per shooting interval gives an error of about 3e-3 on
+   the unit multiplier with 4 shooting points and about 1e-2 with 2 (the
+   bird cases use 2). Its effect on the bird multipliers has not been
+   measured yet.
 
 ## Kinematics realism check
 

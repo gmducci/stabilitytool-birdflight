@@ -333,6 +333,8 @@ The upstream code is Apache License 2.0 (see `LICENSE` and `NOTICE`). Therefore:
   baseline only, keep it identical to `baseline/requirements-baseline.txt`);
   `.venv-np126` is numpy 1.26 + PyYAML + pytest with the package installed,
   for package checks on numpy 1.26.
+- Slow suite: `uv run pytest -m slow` runs the three baseline bird cases
+  (about 15 min); run it in the background.
 - Fast bird check after any change to the bird code:
   `baseline/compare_rhs.py` (about 10 s, bitwise vs upstream).
   Regression check: `baseline/README.md`.
