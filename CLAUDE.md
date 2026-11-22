@@ -66,8 +66,13 @@ to the user, citing the paper section or equation and the file and line.
 
 ## 3. Repository history convention
 
-- Commit 1 is the unmodified upstream code, tagged `upstream-v1.1`. Do not
-  amend it. If the repo does not yet look like this, stop and ask the user.
+- Commit 1 is the unmodified upstream code, tagged `upstream-v1.1`, except
+  `pdfs/` (third-party papers), removed from the whole history on
+  2026-11-22 before the first public push. Do not amend it. If the repo
+  does not yet look like this, stop and ask the user.
+- Remote: `git@github.com:gmducci/stabilitytool-birdflight.git` (public).
+  Author email for commits: the GitHub noreply address set in the repo's
+  git config; never the institutional address.
 - Then one or more commits per stage, prefixed with the stage, for example
   `stage2: move package to src/ layout`.
 - Tag the end of each stage: `stage1-baseline`, `stage2-packaging`, and so on.
@@ -162,8 +167,9 @@ patterns would have been affected.
 - `ms_package/integrator_2.py`: check whether anything uses it.
 - `docs/_build/` (committed build output, including fonts and doctrees) and the
   `docs_bak` doctrees.
-- `pdfs/` holds about 5 MB of third-party papers, and `anim/` holds about 2 MB
-  of mp4s. Ask the user before removing anything from the repository.
+- `pdfs/` (third-party papers) was removed from the history on 2026-11-22 and
+  is kept locally, git-ignored. `anim/` holds about 2 MB of mp4s. Ask the
+  user before removing anything from the repository.
 - `utils/.vscode/`, `multiflap.egg-info` if present.
 - Both `utils/` and `utilities/` packages exist.
 
@@ -305,7 +311,7 @@ Decided:
 
 Still open:
 
-- Whether to keep `pdfs/`, `anim/` and the toy systems in the repository.
+- Whether to keep `anim/` and the toy systems in the repository.
 - Any change to numerical results, including bug fixes (ground rule 2).
 - Whether to report the silently-ignored-parameter issue upstream.
 

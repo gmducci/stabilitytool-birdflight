@@ -13,6 +13,8 @@ results/*
 
 # Copyrighted papers, kept locally only (see CLAUDE.md)
 papers/
+# Third-party papers from upstream, removed from the history (see CHANGELOG.md)
+pdfs/
 
 # Local environments and scratch baseline runs
 .venv/

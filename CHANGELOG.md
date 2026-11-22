@@ -54,6 +54,15 @@ regression tolerance was relaxed from 1e-8 to 1e-6 accordingly; see
 
 ## [Unreleased]
 
+### Repository history rewritten before the first public push (2026-11-22)
+
+- `pdfs/` (four third-party papers shipped by upstream) was removed from
+  every commit, including the `upstream-v1.1` import; the README links now
+  point to the copies in the upstream repository. Nothing else in the
+  trees changed; the baseline tools use `upstream-v1.1` as before.
+- Author, committer and tagger email changed to a GitHub noreply address.
+- All commit hashes and tags changed accordingly (same messages and dates).
+
 ### Stage 6: tests and continuous integration
 
 - `tests/hopf.py`: a test system (Hopf normal form plus a stable direction)
