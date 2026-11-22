@@ -1,0 +1,67 @@
+# Fast test suite on every push and pull request; slow bird regression
+# (about 15 min) nightly and on demand (Actions tab -> Tests -> Run workflow).
+name: Tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      slow:
+        description: "Also run the slow bird regression suite"
+        type: boolean
+        default: true
+
+env:
+  MPLBACKEND: Agg
+  OPENBLAS_NUM_THREADS: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  fast:
+    name: fast · Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # provenance tests read the git commit
+      - uses: astral-sh/setup-uv@v6
+      - name: Install (locked)
+        run: uv sync --locked --python ${{ matrix.python }}
+      - name: Fast suite
+        run: uv run --python ${{ matrix.python }} pytest -ra
+
+  oldest:
+    # Lower bounds of pyproject.toml (numpy 1.26, the baseline environment).
+    name: fast · oldest dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Install lowest direct dependencies
+        run: uv sync --resolution lowest-direct --python 3.12
+      - name: Fast suite
+        run: uv run --no-sync --python 3.12 pytest -ra
+
+  slow:
+    name: slow · bird regression
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.slow)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Install (locked)
+        run: uv sync --locked --python 3.12
+      - name: Slow suite
+        run: uv run pytest -m slow -v -ra
