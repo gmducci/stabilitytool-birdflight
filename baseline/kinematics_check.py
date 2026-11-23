@@ -85,8 +85,8 @@ def analyse(case, n_samples):
     tip, wing_len, aeff_max, aeff_peak_loc, aeff_34, aoa_kin_max = ([] for _ in range(6))
     f_vert, f_hor = [], []
     for t, x in zip(ts, X):
-        le, te = bird.get_wingenvelope(bird.get_wingstate(t))
-        line = bird.get_liftingline(le, te)[0]
+        le, te = bird.wing_edges(bird.joint_angles(t))
+        line = bird.quarter_chord_line(le, te)[0]
         p = line[:, np.argmax(line[0])]            # right lifting-line tip, code frame
         tip.append((-(p[2] + WINGFRAME_POSITION[2]), p[0], -p[1]))  # x' rel. to G, y', z'
         wing_len.append(np.linalg.norm(p))         # shoulder -> tip distance

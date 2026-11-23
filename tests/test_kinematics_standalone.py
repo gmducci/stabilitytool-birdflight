@@ -8,9 +8,9 @@ def test_birdwing_without_aero_or_flight():
     code = textwrap.dedent("""
         import sys
         import numpy as np
-        from stabilitytool_birdflight.kinematics.wing import BirdWing
+        from stabilitytool_birdflight.kinematics.wing import Wing
         from stabilitytool_birdflight.kinematics.joints import Shoulder, Elbow, Wrist, Joint
-        wing = BirdWing(
+        wing = Wing(
             shoulder=Shoulder(axis_x=Joint(0.2, 0.014, -np.pi/2),
                               axis_y=Joint(-np.deg2rad(19), np.deg2rad(20), np.pi/2),
                               axis_z=Joint(0, np.deg2rad(42), np.pi)),

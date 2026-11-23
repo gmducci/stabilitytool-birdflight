@@ -32,7 +32,7 @@ DEFAULT_FEATHER_SPREAD_ANGLES = (np.pi/2, 3*np.pi/8, np.pi/4, np.pi/8, 0, 0, 0)
 DEFAULT_FEATHER_PITCH_ANGLES = (0, 0, 0, 0, 0, 0, 0)
 
 
-def plumes(lengths=DEFAULT_FEATHER_LENGTHS,
+def feather_geometry(lengths=DEFAULT_FEATHER_LENGTHS,
            spread_angles=DEFAULT_FEATHER_SPREAD_ANGLES,
            pitch_angles=DEFAULT_FEATHER_PITCH_ANGLES):
     """Rest rotations and vectors of the master feathers.
@@ -46,5 +46,5 @@ def plumes(lengths=DEFAULT_FEATHER_LENGTHS,
     return prot, pvec
 
 if __name__ == "__main__":
-   plumes()
+   feather_geometry()
 

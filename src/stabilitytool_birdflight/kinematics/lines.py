@@ -24,7 +24,7 @@ limitations under the License.
 '''
 import numpy as np
 
-def distance_point2line(p, p0, v):
+def distance_point_line(p, p0, v):
     s = np.sum(v*(p-p0))
     closest = p0 + (s*v)   # This might be .dot()
     d = np.sqrt(np.sum((p-closest)*(p-closest)))
@@ -33,7 +33,7 @@ def distance_point2line(p, p0, v):
 
 
 
-def distance_line2line(p01, v1, p02, v2):
+def distance_line_line(p01, v1, p02, v2):
 
     v1v2 = np.sum(v1*(v2))
     p01v1 = np.sum(p01*(v1))
@@ -51,7 +51,7 @@ def distance_line2line(p01, v1, p02, v2):
     return(s1, s2, p1, p2, d)
 
 
-def quarterchord_naive(leadingedge, trailingedge):
+def quarter_chord_naive(leadingedge, trailingedge):
     line = .75*leadingedge + .25*trailingedge
     chord_leadingedge = leadingedge
     chord_trailingedge = trailingedge
@@ -129,7 +129,7 @@ def smooth_line(line, npt):
     return line
 
 
-def smooth_quarterline(oldline,oldchordle,oldchordte):
+def smooth_quarter_chord_line(oldline,oldchordle,oldchordte):
 
     npt = np.size((oldline[0]))
     lcurve = 0
@@ -170,7 +170,7 @@ def smooth_quarterline(oldline,oldchordle,oldchordte):
     return line, chord_leadingedge, chord_trailingedge
 
 
-def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, trailingedge):
+def _refine_line_step(line, chord_leadingedge, chord_trailingedge, leadingedge, trailingedge):
     n = np.size(line[0])
     nle = np.size(leadingedge[0])
     nte = np.size(trailingedge[0])
@@ -203,8 +203,8 @@ def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, tr
         jref1 = 0
         jref2 = 1
 
-        [_ , _, dref1] = distance_point2line(leadingedge[:,jref1], line[:,i], chordvec) # If it does not work DP2L[][2] LAST ELEMENT OF OUTPUT
-        [_, _, dref2] = distance_point2line(leadingedge[:,jref2], line[:,i], chordvec)
+        [_ , _, dref1] = distance_point_line(leadingedge[:,jref1], line[:,i], chordvec) # If it does not work DP2L[][2] LAST ELEMENT OF OUTPUT
+        [_, _, dref2] = distance_point_line(leadingedge[:,jref2], line[:,i], chordvec)
 
 
         """
@@ -219,7 +219,7 @@ def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, tr
             dref1 = a
 
         for j in range(2, nle):
-            [_,_,dtest] = distance_point2line(leadingedge[:,j], line[:,i], chordvec)
+            [_,_,dtest] = distance_point_line(leadingedge[:,j], line[:,i], chordvec)
             if (dtest < dref2):
                 dref2 = dtest
                 jref2 = j
@@ -233,15 +233,15 @@ def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, tr
 
         levec = leadingedge[:,jref2] - leadingedge[:,jref1]
         levec = levec/np.linalg.norm(levec)
-        [_, _, newchordle[:,i], _, _] = distance_line2line(leadingedge[:,jref1],levec,line[:,i],chordvec)
+        [_, _, newchordle[:,i], _, _] = distance_line_line(leadingedge[:,jref1],levec,line[:,i],chordvec)
 
         # Repeat this for the trailing edge
 
         jref1 = 0
         jref2 = 1
 
-        [_, _, dref1] = distance_point2line(trailingedge[:,jref1], line[:,i], chordvec) # If it does not work DP2L[][2] LAST ELEMENT OF OUTPUT
-        [_, _, dref2] = distance_point2line(trailingedge[:,jref2], line[:,i], chordvec)
+        [_, _, dref1] = distance_point_line(trailingedge[:,jref1], line[:,i], chordvec) # If it does not work DP2L[][2] LAST ELEMENT OF OUTPUT
+        [_, _, dref2] = distance_point_line(trailingedge[:,jref2], line[:,i], chordvec)
 
         if dref2 < dref1:
             a = jref2
@@ -253,7 +253,7 @@ def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, tr
 
         for j in range(2, nte):
 
-            [_,_,dtest] = distance_point2line(trailingedge[:,j], line[:,i], chordvec)
+            [_,_,dtest] = distance_point_line(trailingedge[:,j], line[:,i], chordvec)
             if (dtest < dref2):
                 dref2 = dtest
                 jref2 = j
@@ -267,17 +267,17 @@ def improveline_new(line, chord_leadingedge, chord_trailingedge, leadingedge, tr
 
         tevec = trailingedge[:,jref2] - trailingedge[:,jref1]
         tevec = tevec/np.linalg.norm(tevec)
-        [_, _, newchordte[:,i], _, _] = distance_line2line(trailingedge[:,jref1],tevec,line[:,i],chordvec)
+        [_, _, newchordte[:,i], _, _] = distance_line_line(trailingedge[:,jref1],tevec,line[:,i],chordvec)
         newline[:,i] = .75*newchordle[:,i] + .25*newchordte[:,i]
 
     return(newline, newchordle, newchordte)
 
-def improveline_iteration(line, chord_leadingedge, chord_trailingedge, leadingedge, trailingedge, it):
+def refine_line(line, chord_leadingedge, chord_trailingedge, leadingedge, trailingedge, it):
 
     relfactor = .25
 
-    [line, chord_leadingedge, chord_trailingedge] = smooth_quarterline(line,chord_leadingedge,chord_trailingedge)
-    [newline, newchordle, newchordte] = improveline_new(line, chord_leadingedge, chord_trailingedge,leadingedge,trailingedge)
+    [line, chord_leadingedge, chord_trailingedge] = smooth_quarter_chord_line(line,chord_leadingedge,chord_trailingedge)
+    [newline, newchordle, newchordte] = _refine_line_step(line, chord_leadingedge, chord_trailingedge,leadingedge,trailingedge)
 
     chgt = 0
 

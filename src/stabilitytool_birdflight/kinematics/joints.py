@@ -33,7 +33,7 @@ class Joint:
         self.amplitude = amplitude
         self.phase = phase
 
-    def motion_joint(self, t, frequency):
+    def angle(self, t, frequency):
         """Joint angle at time t for flapping frequency ``frequency`` [Hz]."""
         omega = frequency*2*np.pi
         motion = self.offset + self.amplitude*np.sin(omega*t + self.phase)

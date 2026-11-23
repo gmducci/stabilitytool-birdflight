@@ -24,7 +24,7 @@ limitations under the License.
 '''
 import numpy as np  # Import NumPy
 
-def RotationMatrix(theta, axis):
+def rotation_matrix(theta, axis):
     
     if axis == "x":
         M = np.array([[1, 0, 0],
@@ -44,7 +44,7 @@ def RotationMatrix(theta, axis):
     return M
 
 
-def CompMatrix(k, axis):
+def scaling_matrix(k, axis):
 
     if axis == "x":
         M = np.array([[k, 0, 0],

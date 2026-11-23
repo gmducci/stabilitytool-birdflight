@@ -23,14 +23,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from ..kinematics.wing import BirdWing
+from ..kinematics.wing import Wing
 from .bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
 
 
-class BirdModel(BirdWing):
+class BirdModel(Wing):
     """Longitudinal flight dynamics of a flapping bird, state x = [u, w, q, theta].
 
-    Couples the wing kinematics (``BirdWing``: joints, frequency, morphology)
+    Couples the wing kinematics (``Wing``: joints, frequency, morphology)
     with the lifting-line aerodynamics. All parameters are read at call time,
     so changing an attribute changes the model. Defaults reproduce upstream
     multiflap (study_1 reference bird).
@@ -58,7 +58,7 @@ class BirdModel(BirdWing):
     stability_fd_step : float
         Relative step of the finite differences in ``get_stability_matrix``.
 
-    Keyword arguments other than the joints are passed to ``BirdWing``
+    Keyword arguments other than the joints are passed to ``Wing``
     (``frequency``, bone and feather geometry, ``body_half_width``,
     ``kinematic_dt``).
     """

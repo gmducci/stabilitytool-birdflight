@@ -57,7 +57,7 @@ CASES = [
     ("hand_length", 0.09, {}, "forces"),
     ("feather_lengths", (.25, .275, .25, .225, .2, .175, .15), {}, "forces"),
     # Feathers 2, 4 and 6 have zero weight at the four skeleton points of the
-    # upstream discretisation (see BirdWing docstring), so vary feather 1.
+    # upstream discretisation (see Wing docstring), so vary feather 1.
     ("feather_spread_angles",
      (np.pi / 2 + 0.1, 3 * np.pi / 8, np.pi / 4, np.pi / 8, 0, 0, 0), {}, "forces"),
     ("feather_pitch_angles", (0.1, 0, 0, 0, 0, 0, 0), {}, "forces"),

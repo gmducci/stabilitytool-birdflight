@@ -55,7 +55,7 @@ class JointConfig:
 
 @dataclass
 class WingConfig:
-    """Gait and morphology of the wing pair (see ``kinematics.wing.BirdWing``).
+    """Gait and morphology of the wing pair (see ``kinematics.wing.Wing``).
 
     Defaults are the upstream multiflap values, except the joints, which must
     be given.
@@ -103,7 +103,7 @@ class WingConfig:
         return to_dict(self)
 
     def wing_parameters(self):
-        """Keyword arguments of ``BirdWing`` (radians, metres, seconds)."""
+        """Keyword arguments of ``Wing`` (radians, metres, seconds)."""
         return dict(
             frequency=self.frequency,
             arm_length=self.arm_length,
@@ -127,6 +127,6 @@ class WingConfig:
         )
 
     def build(self):
-        """A ``BirdWing`` with this gait and morphology."""
-        from .wing import BirdWing
-        return BirdWing(**self.joints(), **self.wing_parameters())
+        """A ``Wing`` with this gait and morphology."""
+        from .wing import Wing
+        return Wing(**self.joints(), **self.wing_parameters())

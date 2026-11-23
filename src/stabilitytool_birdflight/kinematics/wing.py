@@ -4,7 +4,7 @@ file wing.py
 @copyright Copyright © UCLouvain 2020
 Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 Wing geometry code moved here unchanged from bird_model.py (class BirdModel)
-and bird_dynamics.py (get_kinematicvelocity) in Stage 3.
+and bird_dynamics.py (centre_point_velocity) in Stage 3.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -26,13 +26,13 @@ limitations under the License.
 '''
 import numpy as np
 from .joints import Joint, Shoulder, Elbow, Wrist
-from .lines import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
-from .rotations import RotationMatrix, CompMatrix
-from .feathers import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
+from .lines import smooth_line, smooth_quarter_chord_line, quarter_chord_naive, refine_line
+from .rotations import rotation_matrix, scaling_matrix
+from .feathers import (feather_geometry, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
                      DEFAULT_FEATHER_PITCH_ANGLES)
 
 
-class BirdWing:
+class Wing:
     """Kinematics and geometry of a poly-articulated bird wing pair.
 
     Defaults reproduce the upstream multiflap wing (northern bald ibis, study_1).
@@ -46,7 +46,7 @@ class BirdWing:
     arm_length, forearm_length, hand_length : float
         Bone lengths [m].
     feather_lengths, feather_spread_angles, feather_pitch_angles : sequences
-        Master feathers, from the most distal one (see ``feathers.plumes``).
+        Master feathers, from the most distal one (see ``feathers.feather_geometry``).
         Note (upstream behaviour): the skeleton is sampled at four points
         (shoulder, elbow, wrist, tip) and the trailing edge at each point is
         interpolated between neighbouring feathers; at these points feathers
@@ -87,25 +87,25 @@ class BirdWing:
         if isinstance(elbow, Elbow):
             self.elbow = elbow
 
-    def get_wingstate(self, t):
+    def joint_angles(self, t):
 
         f = self.frequency
-        state_shoulder_x = self.shoulder.axis_x.motion_joint(t, f)
-        state_shoulder_y = self.shoulder.axis_y.motion_joint(t, f)
-        state_shoulder_z = self.shoulder.axis_z.motion_joint(t, f)
+        state_shoulder_x = self.shoulder.axis_x.angle(t, f)
+        state_shoulder_y = self.shoulder.axis_y.angle(t, f)
+        state_shoulder_z = self.shoulder.axis_z.angle(t, f)
         # Elbow motion
-        state_elbow_x = self.elbow.axis_x.motion_joint(t, f)
-        state_elbow_y = self.elbow.axis_y.motion_joint(t, f)
+        state_elbow_x = self.elbow.axis_x.angle(t, f)
+        state_elbow_y = self.elbow.axis_y.angle(t, f)
         # Wrist motion
-        state_wrist_y = self.wrist.axis_y.motion_joint(t, f)
-        state_wrist_z = self.wrist.axis_z.motion_joint(t, f)
+        state_wrist_y = self.wrist.axis_y.angle(t, f)
+        state_wrist_z = self.wrist.axis_z.angle(t, f)
 
         wing_state = [state_shoulder_x, state_shoulder_z, state_shoulder_y, state_elbow_y, state_elbow_x, state_wrist_y, state_wrist_z]
         return wing_state
 
-    def get_wingenvelope(self, wing_state):
+    def wing_edges(self, wing_state):
         shoulder_x, shoulder_z, shoulder_y, elbow_y, elbow_x, wrist_y, wrist_z = wing_state
-        [plumesrot, plumesvec] = plumes(self.feather_lengths,
+        [plumesrot, plumesvec] = feather_geometry(self.feather_lengths,
                                         self.feather_spread_angles,
                                         self.feather_pitch_angles)
         dim_plumesrot0 = np.size(plumesrot[0])
@@ -271,19 +271,19 @@ class BirdWing:
         """
         Rotation routine for the three parts of the skeleton (shoulder, elbow, hand)
         """
-        rot1X = RotationMatrix(shoulder_x,'x')
-        rot1Z = RotationMatrix(shoulder_z,'z')
-        rot1Y = RotationMatrix(shoulder_y,'y')
+        rot1X = rotation_matrix(shoulder_x,'x')
+        rot1Z = rotation_matrix(shoulder_z,'z')
+        rot1Y = rotation_matrix(shoulder_y,'y')
         rot1 = np.array(rot1X).dot(np.array(rot1Z)).dot(np.array(rot1Y))
         ey1 = np.array(rot1).dot(np.array(ey))
 
-        rot2relY = RotationMatrix(elbow_y,'y')
-        rot2relX = RotationMatrix(elbow_x,'x')
+        rot2relY = rotation_matrix(elbow_y,'y')
+        rot2relX = rotation_matrix(elbow_x,'x')
         rot2b = np.array(rot1).dot(np.array(rot2relY)).dot(np.array(rot2relX))
         rot2a = np.array(rot1).dot(np.array(rot2relY))
 
-        rot4relY = RotationMatrix(wrist_y,'y')
-        rot4relZ = RotationMatrix(wrist_z,'z')
+        rot4relY = rotation_matrix(wrist_y,'y')
+        rot4relZ = rotation_matrix(wrist_z,'z')
         rot4 = np.array(rot2b).dot(np.array(rot4relY)).dot(np.array(rot4relZ))
 
 
@@ -301,7 +301,7 @@ class BirdWing:
         rot3 = np.array([ex3,ey3,ez3])
         rot3 = rot3.transpose()
         kx = np.linalg.norm(vec3)/np.linalg.norm(vec30)
-        comp3 = CompMatrix(kx,'x')
+        comp3 = scaling_matrix(kx,'x')
 
 
         """
@@ -328,20 +328,20 @@ class BirdWing:
             if i == 0:
                 prerot = rot4
             elif i == 1:
-                prerot = rot4.dot(RotationMatrix(wrist_z/4,'x'))
+                prerot = rot4.dot(rotation_matrix(wrist_z/4,'x'))
             elif i == 2:
-                prerot = rot2b.dot(RotationMatrix(wrist_y/2,'y')).dot(RotationMatrix(-wrist_z/2,'x'))
+                prerot = rot2b.dot(rotation_matrix(wrist_y/2,'y')).dot(rotation_matrix(-wrist_z/2,'x'))
             elif i == 3:
-                prerot = rot2a.dot(RotationMatrix(elbow_x/2,'x')).dot(RotationMatrix(wrist_y/2,'y')).dot(RotationMatrix(-wrist_z/4,'x'))
+                prerot = rot2a.dot(rotation_matrix(elbow_x/2,'x')).dot(rotation_matrix(wrist_y/2,'y')).dot(rotation_matrix(-wrist_z/4,'x'))
             elif i == 4:
-                prerot = rot1.dot(RotationMatrix(elbow_y/2,'y'))
+                prerot = rot1.dot(rotation_matrix(elbow_y/2,'y'))
             elif i == 5:
-                prerot = rot1.dot(RotationMatrix(elbow_y/4,'y'))
+                prerot = rot1.dot(rotation_matrix(elbow_y/4,'y'))
             elif i == 6:
                 prerot = rot1
 
-            rY = RotationMatrix(plumesrot[0,i],'y')
-            rX = RotationMatrix(plumesrot[1,i],'x')
+            rY = rotation_matrix(plumesrot[0,i],'y')
+            rX = rotation_matrix(plumesrot[1,i],'x')
             rot = prerot.dot(rY).dot(rX)
             vecpss[:,i] = np.dot(rot,plumesvec[:,i])
             element = index[i]
@@ -407,7 +407,7 @@ class BirdWing:
 
         leadingedge = np.c_[pts[:,int(number_ellipses/2)::int(number_ellipses)],trailingedge[:,-1]]
         return leadingedge, trailingedge
-    def get_liftingline(self, leadingedge, trailingedge):
+    def quarter_chord_line(self, leadingedge, trailingedge):
         """
         === Call of wing_envelope function. Given the kinematics, the wing shape is found ===
         """
@@ -417,7 +417,7 @@ class BirdWing:
         leadingedge = smooth_line(leadingedge, nlete)
         trailingedge = smooth_line(trailingedge, nlete)
 
-        [line, chord_leadingedge, chord_trailingedge] = quarterchord_naive(leadingedge, trailingedge)
+        [line, chord_leadingedge, chord_trailingedge] = quarter_chord_naive(leadingedge, trailingedge)
 
         """"
         ============= PLOT ROUTINE =============
@@ -433,14 +433,14 @@ class BirdWing:
         it = 1
 
         while a > tol and it < nmax:
-            [line, chord_leadingedge, chord_trailingedge, a] = improveline_iteration(line,chord_leadingedge,
+            [line, chord_leadingedge, chord_trailingedge, a] = refine_line(line,chord_leadingedge,
                                                             chord_trailingedge,leadingedge,trailingedge,it)
 
             chg = np.c_[chg, a]
 
             it = it + 1
 
-        [lifting_line, chord_leadingedge, chord_trailingedge] = smooth_quarterline(line, chord_leadingedge, chord_trailingedge)
+        [lifting_line, chord_leadingedge, chord_trailingedge] = smooth_quarter_chord_line(line, chord_leadingedge, chord_trailingedge)
 
         """
         Output lifting_line, chord_leadingedge, chord_trailingedge CHECKED
@@ -503,7 +503,7 @@ class BirdWing:
 
 
 
-    def merge_lines(self, line_package):
+    def merge_left_right(self, line_package):
         line_r,updir_r,chordir_r,chord_r,line_l,updir_l,chordir_l,chord_l, dx = line_package
         x_ep = self.body_half_width
         nmid = int(np.ceil(2*x_ep/dx))
@@ -532,30 +532,30 @@ class BirdWing:
         backward finite difference over ``kinematic_dt``.
         """
         dt = self.kinematic_dt
-        wing_state = self.get_wingstate(t)
-        wing_state_dt = self.get_wingstate(t-dt)
+        wing_state = self.joint_angles(t)
+        wing_state_dt = self.joint_angles(t-dt)
 
         [leadingedge,
-         trailingedge] = self.get_wingenvelope(wing_state)
+         trailingedge] = self.wing_edges(wing_state)
 
         [leadingedge_dt,
-         trailingedge_dt] = self.get_wingenvelope(wing_state_dt)
+         trailingedge_dt] = self.wing_edges(wing_state_dt)
 
-        lifting_line =  self.get_liftingline(leadingedge,
+        lifting_line =  self.quarter_chord_line(leadingedge,
                                              trailingedge)
 
-        lifting_line_dt =  self.get_liftingline(leadingedge_dt,
+        lifting_line_dt =  self.quarter_chord_line(leadingedge_dt,
                                                 trailingedge_dt)
 
-        [line, chordir, updir, chord] = self.merge_lines(lifting_line)
+        [line, chordir, updir, chord] = self.merge_left_right(lifting_line)
 
-        [line_dt, _, _, _] = self.merge_lines(lifting_line_dt)
+        [line_dt, _, _, _] = self.merge_left_right(lifting_line_dt)
 
-        v_kinematics = get_kinematicvelocity(line, line_dt, dt)
+        v_kinematics = centre_point_velocity(line, line_dt, dt)
         return line, chordir, updir, chord, v_kinematics
 
 
-def get_kinematicvelocity(line, line_dt, dt):
+def centre_point_velocity(line, line_dt, dt):
 
        line_c = line[:, 1:-1:2]
        line_c2 = line_dt[:, 1:-1:2]
