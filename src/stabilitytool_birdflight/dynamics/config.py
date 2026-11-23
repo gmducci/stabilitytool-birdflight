@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import contextlib
-import io
+import logging
+import sys
 import time
 from dataclasses import dataclass
 from typing import Literal, Optional
@@ -21,8 +22,8 @@ class SolverConfig:
     x0 : list of float
         Initial guess for the first shooting point.
     method : "known_period" or "unknown_period"
-        ``MultipleShooting`` (fixed period, e.g. forced systems such as the
-        bird) or ``MultipleShootingPeriod`` (period is an unknown).
+        ``KnownPeriodShooting`` (fixed period, e.g. forced systems such as the
+        bird) or ``UnknownPeriodShooting`` (period is an unknown).
     points : int
         Number of shooting points M (M - 1 intervals).
     period : float, optional
@@ -85,53 +86,52 @@ class SolverConfig:
         return to_dict(self)
 
     def build(self, model):
-        """Multiple-shooting object and solver for ``model``."""
-        from .multiple_shooting import MultipleShooting
-        from .multiple_shooting_period import MultipleShootingPeriod
-        from .lma_solver import Solver
-        from .lma_solver_period import SolverPeriod
+        """Multiple-shooting discretisation of ``model`` described by this config."""
+        from .shooting import KnownPeriodShooting, UnknownPeriodShooting
         x0 = list(self.x0)
         if self.method == "known_period":
             if self.period is None:
                 raise ConfigError("solver.period: required for known_period")
-            ms = MultipleShooting(x0, M=self.points, period=self.period,
-                                  t_steps=self.t_steps, model=model,
-                                  option_jacobian=self.jacobian)
-            solver = Solver(tolerance=self.tolerance,
-                            max_iterations=self.max_iterations, ms_obj=ms)
-        else:
-            ms = MultipleShootingPeriod(x0, M=self.points,
-                                        period_guess=self.period_guess,
-                                        t_steps=self.t_steps, model=model,
-                                        option_jacobian=self.jacobian,
-                                        integrator=self.integrator)
-            solver = SolverPeriod(tolerance=self.tolerance,
-                                  max_iterations=self.max_iterations, ms_obj=ms)
-        return ms, solver
+            return KnownPeriodShooting(model, x0, points=self.points, period=self.period,
+                                       t_steps=self.t_steps, jacobian=self.jacobian)
+        return UnknownPeriodShooting(model, x0, points=self.points,
+                                     period_guess=self.period_guess,
+                                     t_steps=self.t_steps, jacobian=self.jacobian,
+                                     integrator=self.integrator)
 
     def solve(self, model, verbose=False, log_stream=None):
         """Find the limit cycle of ``model``; returns a ``LimitCycleResult``.
 
-        The upstream solvers print progress: written to ``log_stream`` if
-        given, shown with ``verbose=True``, discarded otherwise.
+        Solver progress (logger ``stabilitytool_birdflight``) is written to
+        ``log_stream`` if given, or to standard output with ``verbose=True``.
+        Raises ``solver.ConvergenceError`` if the solver does not converge.
         """
-        import numpy as np
         from .result import LimitCycleResult
-        _, solver = self.build(model)
-        if log_stream is not None:
-            stream = contextlib.redirect_stdout(log_stream)
-        elif verbose:
-            stream = contextlib.nullcontext()
-        else:
-            stream = contextlib.redirect_stdout(io.StringIO())
+        from .solver import levenberg_marquardt
+        shooting = self.build(model)
+        stream = log_stream if log_stream is not None else (sys.stdout if verbose else None)
         t0 = time.perf_counter()
-        try:
-            with stream:
-                output = solver.lma()
-        except UnboundLocalError as exc:
-            # upstream solvers leave jac_sg undefined when they do not converge
-            raise RuntimeError(f"solver did not converge within {self.max_iterations} "
-                               f"iterations") from exc
-        return LimitCycleResult.from_solver_output(
-            output, self.tolerance, time.perf_counter() - t0,
-            iteration_times=np.diff(solver.iteration_start_times))
+        with _log_to(stream):
+            output = levenberg_marquardt(shooting, tolerance=self.tolerance,
+                                         max_iterations=self.max_iterations)
+        return LimitCycleResult.from_solver_output(output, self.tolerance,
+                                                   time.perf_counter() - t0)
+
+
+@contextlib.contextmanager
+def _log_to(stream):
+    """Send the package's log records (all levels) to ``stream`` meanwhile."""
+    if stream is None:
+        yield
+        return
+    logger = logging.getLogger("stabilitytool_birdflight")
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    old_level = logger.level
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(old_level)

@@ -80,8 +80,17 @@ class LimitCycleResult:
     @classmethod
     def from_solver_output(cls, output, tolerance, elapsed_s=float("nan"),
                            iteration_times=None):
-        """Build from the tuple of ``Solver.lma()`` / ``SolverPeriod.lma()``."""
-        x, ptlist, error, complete_solution, jac_sg = output
+        """Build from a ``solver.ShootingSolution``.
+
+        Also accepts upstream ``lma()``'s tuple ``(x, ptlist, error,
+        complete_solution, jac_sg)`` (used by the baseline tools).
+        """
+        if hasattr(output, "monodromy"):
+            x, ptlist, error, complete_solution, jac_sg = output[:5]
+            if iteration_times is None:
+                iteration_times = np.diff(output.iteration_start_times)
+        else:
+            x, ptlist, error, complete_solution, jac_sg = output
         eigvals, eigvecs = np.linalg.eig(jac_sg)
         multipliers, eigenvectors = sort_multipliers(eigvals, eigvecs)
         t = np.asarray(complete_solution.time, float)

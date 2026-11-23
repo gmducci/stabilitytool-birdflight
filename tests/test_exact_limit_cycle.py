@@ -8,16 +8,13 @@ known-period analytical monodromy (RK2 with a fixed 30 points per shooting
 interval, used by the bird model) is the least accurate part: its error
 on the unit multiplier is about 3e-3 with 4 shooting points.
 """
-import contextlib
-import io
-
 import numpy as np
 import pytest
 
 from hopf import Hopf
 from stabilitytool_birdflight.dynamics.config import SolverConfig
-from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
-from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
+from stabilitytool_birdflight.dynamics.shooting import KnownPeriodShooting, UnknownPeriodShooting
+from stabilitytool_birdflight.dynamics.solver import ConvergenceError
 
 X0 = [0.6, 0.3, 0.4]          # off the cycle
 STATE = np.array([0.7, 0.4, 0.3])
@@ -26,11 +23,6 @@ TAU = 2.0
 
 def rel(a, b):
     return np.max(np.abs(np.asarray(a) - b)) / np.max(np.abs(b))
-
-
-def quiet(fn, *args):
-    with contextlib.redirect_stdout(io.StringIO()):
-        return fn(*args)
 
 
 def check_cycle(res, model, tol):
@@ -46,19 +38,19 @@ def check_cycle(res, model, tol):
 @pytest.mark.parametrize("integrator,tol", [("rk", 3e-5), ("odeint", 1e-7)])   # measured 8.3e-6, 1.5e-8
 def test_interval_jacobian_unknown_period(integrator, tol):
     model = Hopf()
-    ms = MultipleShootingPeriod(list(STATE), M=2, period_guess=TAU, t_steps=200,
-                                model=model, integrator=integrator)
+    ms = UnknownPeriodShooting(model, list(STATE), points=2, period_guess=TAU,
+                               t_steps=200, integrator=integrator)
     exact = model.flow_jacobian(STATE, TAU)
-    assert rel(quiet(ms.get_jacobian_analytical, STATE, 0., TAU), exact) < tol
-    assert rel(quiet(ms.get_jacobian_numerical, STATE, 0., TAU), exact) < 2e-5   # 5.3e-6
+    assert rel(ms.interval_jacobian_analytical(STATE, 0., TAU), exact) < tol
+    assert rel(ms.interval_jacobian_numerical(STATE, 0., TAU), exact) < 2e-5   # 5.3e-6
 
 
 def test_interval_jacobian_known_period():
     model = Hopf()
-    ms = MultipleShooting(list(STATE), M=2, period=TAU, t_steps=200, model=model)
+    ms = KnownPeriodShooting(model, list(STATE), points=2, period=TAU, t_steps=200)
     exact = model.flow_jacobian(STATE, TAU)
-    assert rel(quiet(ms.get_jacobian_analytical, STATE, 0., TAU), exact) < 1e-2   # 2.5e-3 (RK2, 30 points)
-    assert rel(quiet(ms.get_jacobian_numerical, STATE, 0., TAU), exact) < 2e-3    # 5.3e-4 (epsilon 1e-3)
+    assert rel(ms.interval_jacobian_analytical(STATE, 0., TAU), exact) < 1e-2   # 2.5e-3 (RK2, 30 points)
+    assert rel(ms.interval_jacobian_numerical(STATE, 0., TAU), exact) < 2e-3    # 5.3e-4 (epsilon 1e-3)
 
 
 def test_known_period_monodromy_converges_with_finer_intervals():
@@ -81,9 +73,9 @@ def test_known_period_monodromy_converges_with_finer_intervals():
 @pytest.mark.parametrize("cls", ["known", "unknown"])
 def test_numerical_jacobian_with_zero_coordinate(cls):
     model = Hopf(); x = np.array([1.0, 0.0, 0.0])
-    ms = (MultipleShooting(list(x), M=2, period=TAU, t_steps=200, model=model) if cls == "known"
-          else MultipleShootingPeriod(list(x), M=2, period_guess=TAU, t_steps=200, model=model))
-    assert np.all(np.isfinite(quiet(ms.get_jacobian_numerical, x, 0., TAU)))
+    ms = (KnownPeriodShooting(model, list(x), points=2, period=TAU, t_steps=200) if cls == "known"
+          else UnknownPeriodShooting(model, list(x), points=2, period_guess=TAU, t_steps=200))
+    assert np.all(np.isfinite(ms.interval_jacobian_numerical(x, 0., TAU)))
 
 
 # --- full solves -----------------------------------------------------------------
@@ -124,7 +116,7 @@ def test_known_period_solver(jacobian, unit_tol):
 
 
 def test_solver_reports_non_convergence():
-    with pytest.raises(RuntimeError, match="did not converge"):
+    with pytest.raises(ConvergenceError, match="did not converge"):
         SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=6.0,
                      t_steps=200, integrator="odeint", tolerance=1e-14,
                      max_iterations=2).solve(Hopf())

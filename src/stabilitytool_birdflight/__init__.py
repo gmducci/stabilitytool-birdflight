@@ -16,10 +16,10 @@ except _PackageNotFoundError:  # running from a source tree without installation
     __version__ = "unknown"
 
 _LAZY = {
-    "MultipleShootingPeriod": ".dynamics.multiple_shooting_period",
-    "SolverPeriod": ".dynamics.lma_solver_period",
-    "MultipleShooting": ".dynamics.multiple_shooting",
-    "Solver": ".dynamics.lma_solver",
+    "KnownPeriodShooting": ".dynamics.shooting",
+    "UnknownPeriodShooting": ".dynamics.shooting",
+    "levenberg_marquardt": ".dynamics.solver",
+    "ConvergenceError": ".dynamics.solver",
     "SaveData": ".utilities.save_data",
     "RedoxModel": ".dynamics.systems.redox",
     "Rossler": ".dynamics.systems.rossler",

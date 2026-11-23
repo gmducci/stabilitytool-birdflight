@@ -100,11 +100,8 @@ def _bird_import():
     import numpy as np
     if _target() == "package":
         _ensure_package_importable()
-        from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
-        from stabilitytool_birdflight.dynamics.lma_solver import Solver
-        from stabilitytool_birdflight.flight.bird import BirdModel
-        from stabilitytool_birdflight.kinematics.joints import Shoulder, Elbow, Wrist, Joint
-        return np, MultipleShooting, Solver, BirdModel, Shoulder, Elbow, Wrist, Joint
+        # the package target solves through BirdCaseConfig (see _bird_case)
+        return (np,) + (None,)*7
     upstream_pkg = _upstream_dir() / "multiflap"
     sys.path.insert(0, str(upstream_pkg))
     os.chdir(upstream_pkg)
