@@ -45,8 +45,6 @@ stabilitytool-birdflight = "stabilitytool_birdflight.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.package-data]
-"stabilitytool_birdflight.aerodynamics" = ["polar.txt"]
 
 [dependency-groups]
 dev = [

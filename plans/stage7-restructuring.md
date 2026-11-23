@@ -24,7 +24,7 @@ result still reads as multiflap:
 - **Dead code:**
   - `integrator_2.py`, `MergeLines.py`, `polar.py` (all commented out),
     `polar.txt`, `circulation_polar` (calls the undefined
-    `polar.lift_coefficient`), `improveline_new`, and the unused `WingState`
+    `polar.lift_coefficient`), and the unused `WingState`
     namedtuple (its field order differs from the list actually passed around).
   - Also: `utils/`, `visualisation/`, and `utilities/` except `SaveData`.
 - **Scripts inside the package:** `main.py`, `*_main.py`, `main_torus.py` and

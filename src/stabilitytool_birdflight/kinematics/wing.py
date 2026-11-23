@@ -31,17 +31,6 @@ from .RotationMatrix import RotationMatrix
 from .CompMatrix import CompMatrix
 from .Plumes import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
                      DEFAULT_FEATHER_PITCH_ANGLES)
-from collections import namedtuple
-
-WingState = namedtuple('WingState',[
-    'shoulder_x',
-    'shoulder_y',
-    'shoulder_z',
-    'elbow_x',
-    'elbow_y',
-    'wrist_y',
-    'wrist_z'] )
-
 
 
 class BirdWing:
@@ -101,18 +90,6 @@ class BirdWing:
 
     def get_wingstate(self, t):
 
-#        ws = WingState()
-
-        # Shoulder motion
-        #ws.shoulder_x = self.shoulder.axis_x.motion_joint(t)
-        #ws.shoulder_y = self.shoulder.axis_y.motion_joint(t)
-        #ws.shoulder_z = self.shoulder.axis_z.motion_joint(t)
-        ## Elbow motion
-        #ws.elbow_x = self.elbow.axis_x.motion_joint(t)
-        #ws.elbow_y = self.elbow.axis_y.motion_joint(t)
-        ## Wrist motion
-        #ws.wrist_y = self.wrist.axis_y.motion_joint(t)
-        #ws.wrist_z = self.wrist.axis_z.motion_joint(t)
         f = self.frequency
         state_shoulder_x = self.shoulder.axis_x.motion_joint(t, f)
         state_shoulder_y = self.shoulder.axis_y.motion_joint(t, f)
@@ -125,7 +102,6 @@ class BirdWing:
         state_wrist_z = self.wrist.axis_z.motion_joint(t, f)
 
         wing_state = [state_shoulder_x, state_shoulder_z, state_shoulder_y, state_elbow_y, state_elbow_x, state_wrist_y, state_wrist_z]
-        #return ws
         return wing_state
 
     def get_wingenvelope(self, wing_state):
