@@ -9,7 +9,7 @@ effective angle of attack and the split of weight support between downstroke
 and upstroke. See the "Kinematics realism check" section of baseline/README.md.
 
 No source file is edited. The only intervention is a wrapper around
-``aero_package.flapping_forces.circulation`` that records the angle of attack
+``aerodynamics.lifting_line.solve_circulation`` that records the angle of attack
 and circulation of the last lifting-line iteration (upstream computes them but
 does not return them).
 
@@ -63,7 +63,7 @@ def analyse(case, n_samples):
     import stabilitytool_birdflight.aerodynamics.lifting_line as ff
 
     captured = {}
-    original = ff.circulation
+    original = ff.solve_circulation
 
     def recording_circulation(y, z, yc, zc, chord, aoa, cl_alpha, V, gamma):
         g, vs = original(y, z, yc, zc, chord, aoa, cl_alpha, V, gamma)
@@ -72,7 +72,7 @@ def analyse(case, n_samples):
                         gamma=np.array(g).ravel())
         return g, vs
 
-    ff.circulation = recording_circulation
+    ff.solve_circulation = recording_circulation
     bird = build_bird(SHOULDER_AMPLITUDE[case])
 
     data = np.load(REPO / "baseline" / "data" / f"{case}.npz")

@@ -24,7 +24,7 @@ limitations under the License.
 '''
 import numpy as np
 
-def inucedvel_filament(X1,Xleg,legdir, vstrength):
+def induced_velocity_filament(X1,Xleg,legdir, vstrength):
 ### returns the induced velocity on X1 of a seminfinite circulation
 ###leg starting in Xleg directed along legdir and with strenght vstrength (BIOT-Savart law integrated from Xleg to \infty)
 ### for using in lifting line legdir is direction of Vinf, vstrength is d\lambda
@@ -44,7 +44,7 @@ def inucedvel_filament(X1,Xleg,legdir, vstrength):
         vind=vstrength*V1coeff
     return(vind)
 
-def inducedvel_segment(X,Xlegs,Xlege,vstrength,sigma):
+def induced_velocity_segment(X,Xlegs,Xlege,vstrength,sigma):
 ### calculates the exact regularized version given by Wincklemans (LOA Rosenhead-Moore)
     ### X is where you calculate the induced velocity. Xlegs/e are starting and ending point of the segment, vstrength is the circulation.
     ### sigma is a regularization parameter which by default is zero

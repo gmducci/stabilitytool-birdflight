@@ -25,7 +25,7 @@ limitations under the License.
 import numpy as np
 
 
-def delta_tail(velocity_vector, tail_span, *, tail_length, rho=1.225,
+def tail_force(velocity_vector, tail_span, *, tail_length, rho=1.225,
                kin_viscosity=1.5e-5, reference_velocity=15):
     """Tail forces (slender-body lift, induced and skin-friction drag).
 

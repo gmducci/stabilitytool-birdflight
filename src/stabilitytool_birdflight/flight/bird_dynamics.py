@@ -23,7 +23,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from ..aerodynamics.lifting_line import get_flappingforces
+from ..aerodynamics.lifting_line import lifting_line_forces
 import scipy.integrate as ode
 import time
 from math import sin, cos
@@ -78,7 +78,7 @@ def get_aeroforces(self, x0, t):
         [line, chordir, updir, chord,
          v_kinematics] = self.get_lifting_line_kinematics(t)
 
-        # call the aereodynamic solver for the lifting line get_flappingforces
+        # call the aereodynamic solver for the lifting line lifting_line_forces
         [Fx,
          Fy,
          Fz,
@@ -87,7 +87,7 @@ def get_aeroforces(self, x0, t):
          M_wing,
          M_tail,
          M_drag,
-         M_lift] = get_flappingforces(
+         M_lift] = lifting_line_forces(
             np.array([0, x0[1], x0[0]]),          # free stream [0, w, u]
             np.array([x0[2], 0, 0]),              # angular velocity [q, 0, 0]
             v_kinematics, line, chordir, updir, chord,

@@ -38,7 +38,7 @@ class AerodynamicsConfig:
         return to_dict(self)
 
     def force_parameters(self):
-        """Keyword arguments of ``get_flappingforces`` set by this config."""
+        """Keyword arguments of ``lifting_line_forces`` set by this config."""
         return dict(rho=self.rho, cl_alpha=self.cl_alpha,
                     kin_viscosity=self.kin_viscosity,
                     tail_reference_velocity=self.tail_reference_velocity,

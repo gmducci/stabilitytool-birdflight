@@ -23,11 +23,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from .vortex import inucedvel_filament, inducedvel_segment
-from .tail import delta_tail, tail_geometry
+from .vortex import induced_velocity_filament, induced_velocity_segment
+from .tail import tail_force, tail_geometry
 
 
-def circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,gamma):
+def solve_circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,gamma):
 
     gamma_new = np.zeros_like(gamma)
     vs = np.zeros([3,np.size(gamma)])
@@ -64,7 +64,7 @@ def circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,gamma):
     return gamma_new, vs
 
 
-def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
+def lifting_line_forces(freestream, angular_velocity, v_kin, line, chordir,
                        updir, chord, *, wing_position, tail_position,
                        tail_length, tail_opening, rho=1.225,
                        cl_alpha=2*np.pi, kin_viscosity=1.5e-5,
@@ -183,7 +183,7 @@ def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
 
         count = count + 1
 
-        [gamma_new, v_downwash] = circulation(line[0,:], line[1,:], line_c[0,:], line_c[1,:],chord, angle_of_attack, cl_alpha, norm_velocity, gamma)
+        [gamma_new, v_downwash] = solve_circulation(line[0,:], line[1,:], line_c[0,:], line_c[1,:],chord, angle_of_attack, cl_alpha, norm_velocity, gamma)
 
         error = np.mean(np.abs(gamma - gamma_new))/np.mean(np.abs(gamma_new))
 
@@ -220,7 +220,7 @@ def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
     for i in range (len(line)):
         lever_arm1[:, i] = line[:, i] + wingframe_position
         BS_radius1[:,i] = (NP_tail - lever_arm1[:, i])
-        V_ind = V_ind + inucedvel_filament(BS_radius1[:,i],line[:,i], U, gamma_filament[i])
+        V_ind = V_ind + induced_velocity_filament(BS_radius1[:,i],line[:,i], U, gamma_filament[i])
 
 
     velocity_tail_q = np.cross(ang_velocity,tail_frame_position)
@@ -247,7 +247,7 @@ def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
         M_lift = M_lift + M_lift_j[0]
         My = My + M[0]
 
-    F_tail_tot = delta_tail(U_tail, tail_span, tail_length=tail_length,
+    F_tail_tot = tail_force(U_tail, tail_span, tail_length=tail_length,
                             rho=rho, kin_viscosity=kin_viscosity,
                             reference_velocity=tail_reference_velocity)
 
