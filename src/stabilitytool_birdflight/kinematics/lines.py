@@ -1,7 +1,8 @@
 '''
-file line_functions.py
+file lines.py
 @author Victor Colognesi
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 

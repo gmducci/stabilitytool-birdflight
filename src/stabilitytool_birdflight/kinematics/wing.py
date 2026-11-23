@@ -25,11 +25,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from .bird import Joint, Shoulder, Elbow, Wrist
-from .line_functions import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
-from .RotationMatrix import RotationMatrix
+from .joints import Joint, Shoulder, Elbow, Wrist
+from .lines import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
+from .rotations import RotationMatrix
 from .CompMatrix import CompMatrix
-from .Plumes import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
+from .feathers import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
                      DEFAULT_FEATHER_PITCH_ANGLES)
 
 
@@ -47,7 +47,7 @@ class BirdWing:
     arm_length, forearm_length, hand_length : float
         Bone lengths [m].
     feather_lengths, feather_spread_angles, feather_pitch_angles : sequences
-        Master feathers, from the most distal one (see ``Plumes.plumes``).
+        Master feathers, from the most distal one (see ``feathers.plumes``).
         Note (upstream behaviour): the skeleton is sampled at four points
         (shoulder, elbow, wrist, tip) and the trailing edge at each point is
         interpolated between neighbouring feathers; at these points feathers

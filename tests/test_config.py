@@ -10,7 +10,7 @@ import yaml
 from stabilitytool_birdflight.configio import ConfigError
 from stabilitytool_birdflight.flight.bird_model import BirdModel
 from stabilitytool_birdflight.flight.config import BirdCaseConfig
-from stabilitytool_birdflight.kinematics.bird import Elbow, Joint, Shoulder, Wrist
+from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
 
 CONFIGS = Path(__file__).resolve().parents[1] / "examples" / "configs"
 CASE_FILES = sorted(CONFIGS.glob("*.yaml"))

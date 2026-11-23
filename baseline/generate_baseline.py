@@ -103,7 +103,7 @@ def _bird_import():
         from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
         from stabilitytool_birdflight.dynamics.lma_solver import Solver
         from stabilitytool_birdflight.flight.bird_model import BirdModel
-        from stabilitytool_birdflight.kinematics.bird import Shoulder, Elbow, Wrist, Joint
+        from stabilitytool_birdflight.kinematics.joints import Shoulder, Elbow, Wrist, Joint
         return np, MultipleShooting, Solver, BirdModel, Shoulder, Elbow, Wrist, Joint
     upstream_pkg = _upstream_dir() / "multiflap"
     sys.path.insert(0, str(upstream_pkg))

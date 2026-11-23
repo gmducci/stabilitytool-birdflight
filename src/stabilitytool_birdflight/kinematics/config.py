@@ -20,7 +20,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..configio import ConfigError, check_finite, check_positive, from_dict, to_dict
-from .bird import Elbow, Joint, Shoulder, Wrist
+from .joints import Elbow, Joint, Shoulder, Wrist
 
 __all__ = ["JointConfig", "WingConfig"]
 
