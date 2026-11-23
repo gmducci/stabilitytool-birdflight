@@ -22,9 +22,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-import numpy as np  # Import NumPy
+from collections import namedtuple
+
+import numpy as np
+
 from .vortex import induced_velocity_filament, induced_velocity_segment
 from .tail import tail_force, tail_geometry
+
+
+__all__ = ["AeroForces", "lifting_line_forces", "solve_circulation"]
+
+#: Forces [N] and pitching moments [N m] in the wing frame (x spanwise, y up,
+#: z backward); moments are about the x axis through the centre of mass.
+AeroForces = namedtuple("AeroForces", [
+    "fx",            # wing force along x (spanwise; cancels for a symmetric wing)
+    "fy",            # wing force along y (up)
+    "fz",            # wing force along z (backward)
+    "my",            # total pitching moment, wing + tail (upstream name My)
+    "tail_fy",       # tail force along y
+    "wing_moment",   # pitching moment of the wing forces
+    "tail_moment",   # pitching moment of the tail force
+    "drag_moment",   # part of wing_moment due to drag
+    "lift_moment",   # part of wing_moment due to lift
+])
 
 
 def solve_circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,gamma):
@@ -64,27 +84,27 @@ def solve_circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,g
     return gamma_new, vs
 
 
-def lifting_line_forces(freestream, angular_velocity, v_kin, line, chordir,
-                       updir, chord, *, wing_position, tail_position,
-                       tail_length, tail_opening, rho=1.225,
-                       cl_alpha=2*np.pi, kin_viscosity=1.5e-5,
-                       tail_reference_velocity=15, tol=0.001,
-                       max_iterations=50):
+def lifting_line_forces(geometry, freestream, angular_velocity, *, wing_position,
+                        tail_position, tail_length, tail_opening, rho=1.225,
+                        cl_alpha=2*np.pi, kin_viscosity=1.5e-5,
+                        tail_reference_velocity=15, tol=0.001,
+                        max_iterations=50):
     """Quasi-steady lifting-line forces on a wing, plus a tail.
 
-    All vectors are expressed in the wing frame used by the lifting line.
+    All vectors are expressed in the wing frame used by the lifting line
+    (x spanwise, y up, z backward).
 
     Parameters
     ----------
+    geometry : WingGeometry-like
+        Object with ``line``, ``chord_dir``, ``up_dir``, ``chord`` and
+        ``velocity`` (the wing-motion velocity of the centre points), such as
+        ``kinematics.wing.WingGeometry``.
     freestream : (3,) array
         Velocity of the air relative to the body, far from the wing
         (upstream bird model: ``[0, w, u]``).
     angular_velocity : (3,) array
         Angular velocity of the body (upstream bird model: ``[q, 0, 0]``).
-    v_kin : (3, n) array
-        Velocity of the lifting-line centre points due to the wing motion.
-    line, chordir, updir, chord : arrays
-        Lifting-line geometry (points, chord and up directions, chords).
     wing_position : (3,) array
         Position of the wing frame origin relative to the centre of mass.
     tail_position : (3,) array
@@ -103,7 +123,13 @@ def lifting_line_forces(freestream, angular_velocity, v_kin, line, chordir,
         Velocity [m/s] used for the tail Reynolds number.
     tol, max_iterations : float, int
         Convergence settings of the circulation iteration.
+
+    Returns
+    -------
+    AeroForces
     """
+    line, chordir, updir, chord = geometry.line, geometry.chord_dir, geometry.up_dir, geometry.chord
+    v_kin = geometry.velocity
     U = freestream
     ang_velocity = angular_velocity
 
@@ -253,4 +279,4 @@ def lifting_line_forces(freestream, angular_velocity, v_kin, line, chordir,
 
     M_tail = np.cross(NP_tail, F_tail_tot)
     My = M_wing + M_tail[0]
-    return Fx, Fy, Fz, My, F_tail_tot[1], M_wing, M_tail[0], M_drag, M_lift
+    return AeroForces(Fx, Fy, Fz, My, F_tail_tot[1], M_wing, M_tail[0], M_drag, M_lift)

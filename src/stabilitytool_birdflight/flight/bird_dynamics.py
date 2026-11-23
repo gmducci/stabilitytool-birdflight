@@ -75,10 +75,6 @@ def get_aeroforces(self, x0, t):
         Outputs:
             aereodynamic_forces : components of the aereod. forces and moments
         """
-        [line, chordir, updir, chord,
-         v_kinematics] = self.geometry(t)
-
-        # call the aereodynamic solver for the lifting line lifting_line_forces
         [Fx,
          Fy,
          Fz,
@@ -88,9 +84,9 @@ def get_aeroforces(self, x0, t):
          M_tail,
          M_drag,
          M_lift] = lifting_line_forces(
+            self.geometry(t),
             np.array([0, x0[1], x0[0]]),          # free stream [0, w, u]
             np.array([x0[2], 0, 0]),              # angular velocity [q, 0, 0]
-            v_kinematics, line, chordir, updir, chord,
             wing_position=self.wingframe_position,
             tail_position=self.wingframe_position_tail,
             tail_length=self.tail_length,
