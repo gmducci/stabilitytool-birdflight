@@ -296,3 +296,130 @@ def refine_line(line, chord_leadingedge, chord_trailingedge, leadingedge, traili
     chord_trailingedge = relfactor*newchordte + (1-relfactor)*chord_trailingedge
 
     return line, chord_leadingedge, chord_trailingedge, chgt
+
+
+def quarter_chord_line(leadingedge, trailingedge):
+    """Quarter-chord line of the right wing and its mirror image.
+
+    The edges are resampled on 16 points, the quarter-chord line is refined
+    iteratively (``refine_line``) and smoothed. Returns ``lifting_line, updir,
+    chord_direction, chord`` (right wing), the same four for the left wing,
+    and the mean spacing ``dx`` of the line points.
+    """
+
+    nlete = 16
+
+    leadingedge = smooth_line(leadingedge, nlete)
+    trailingedge = smooth_line(trailingedge, nlete)
+
+    [line, chord_leadingedge, chord_trailingedge] = quarter_chord_naive(leadingedge, trailingedge)
+
+    tol = 0.1
+    nmax = 10
+    a = tol + 1
+    chg = tol + 1
+    it = 1
+
+    while a > tol and it < nmax:
+        [line, chord_leadingedge, chord_trailingedge, a] = refine_line(line,chord_leadingedge,
+                                                        chord_trailingedge,leadingedge,trailingedge,it)
+
+        chg = np.c_[chg, a]
+
+        it = it + 1
+
+    [lifting_line, chord_leadingedge, chord_trailingedge] = smooth_quarter_chord_line(line, chord_leadingedge, chord_trailingedge)
+
+    line_dummy = np.copy(lifting_line)
+    nl = np.size(line[0])
+    chord_direction = np.zeros((3,nl))
+    updir = np.zeros((3,nl))
+    chord = np.zeros((nl))
+
+# =============================================================================
+#     Evaluating the chord and its direction
+#     For every slice, it's calculated the distance btw Lead. edge and Trail.
+#     edge (chord_distance), and then the modulus, so that the versor is
+#     identified.
+# =============================================================================
+
+    for i in range(nl):
+
+        chord_distance = (chord_trailingedge[:,i] - chord_leadingedge[:,i]) + 1e-20
+        chord[i] = np.linalg.norm(chord_distance)
+        #chord = chord[:,np.newaxis]
+        chord_direction[:,i] = chord_distance/chord[i]
+
+        if i == 0:
+            linevec = line[:,1] - line[:,0]
+        elif i == (nl - 1):
+            linevec = line[:,-1] - line[:,-2]
+        else:
+            linevec = line[:,i+1] - line[:,i-1]
+
+        linevec = linevec/np.linalg.norm(linevec)
+        updir[:,i] = np.cross(chord_direction[:,i], linevec)  # Different value in the last iteration
+
+    updir_dummy = np.copy(updir)
+    chord_direction_dummy = np.copy(chord_direction)
+    chord_dummy = np.copy(chord)
+    # Left Wing
+
+    line_left = np.fliplr(line_dummy)
+    up_direction_left = np.fliplr(updir_dummy)
+    chord_direction_left = np.fliplr(chord_direction_dummy)
+    chord_left = chord_dummy[::-1]
+
+    line_left[0,:] = np.negative(line_left[0,:])
+    chord_direction_left[0,:] = np.negative(chord_direction_left[0,:])
+    up_direction_left[0,:] = np.negative(up_direction_left[0,:])
+
+    sumvector = np.zeros((1,nl))
+    for i in range(nl):
+        if i < nl-1:
+            sumvector[0,i] = np.sum((lifting_line[:,i+1] - lifting_line[:,i])**2)
+        else:
+            sumvector[0,i] = np.sum((lifting_line[:,-1] - lifting_line[:, -2])**2)
+
+
+    dx = np.mean(np.sqrt(sumvector))
+
+    return lifting_line, updir, chord_direction, chord, line_left, up_direction_left, chord_direction_left, chord_left, dx
+
+
+
+def merge_left_right(line_package, body_half_width):
+    """Join both wings across the body into one lifting line.
+
+    ``line_package`` is the output of ``quarter_chord_line``. The wings are
+    shifted by +-``body_half_width`` and joined by straight points whose
+    chord is divided by 1e4 (no lift over the body). Returns ``line, chordir,
+    updir, chord``.
+    """
+    line_r,updir_r,chordir_r,chord_r,line_l,updir_l,chordir_l,chord_l, dx = line_package
+    x_ep = body_half_width
+    nmid = int(np.ceil(2*x_ep/dx))
+    line_r[0,:] = line_r[0,:] + x_ep
+    line_l[0,:] = line_l[0,:] - x_ep
+
+    xmid = np.linspace(line_l[0,-1],line_r[0,0],nmid)
+    length_xmid = np.size(xmid)
+    line_mid = np.array([xmid, line_r[1,0]*np.ones(np.size(xmid)), line_r[2,0]*np.ones(np.size(xmid))])
+    chordir_mid = np.array([chordir_r[:,0] for i in range(np.size(xmid))]).T
+    updir_mid = np.array([updir_r[:,0] for i in range(np.size(xmid))]).T
+    chord_mid = np.zeros(length_xmid)
+    chord_mid[:] = chord_r[0]*np.ones(length_xmid)
+
+    line = np.c_[line_l,line_mid[:,1:-1],line_r]
+    chordir = np.c_[chordir_l, chordir_mid[:,1:-1], chordir_r]
+    updir = np.c_[updir_l, updir_mid[:,1:-1], updir_r]
+    chord = np.concatenate([chord_l, chord_mid[1:-1]/1e4, chord_r])
+    return line, chordir, updir, chord
+
+
+def centre_point_velocity(line, line_dt, dt):
+    """Velocity of the lifting-line centre points by backward finite difference."""
+    line_c = line[:, 1:-1:2]
+    line_c2 = line_dt[:, 1:-1:2]
+    v_kin = (line_c - line_c2)/dt
+    return v_kin

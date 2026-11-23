@@ -61,6 +61,7 @@ def analyse(case, n_samples):
     except ImportError:  # not installed: use the source tree
         sys.path.insert(0, str(REPO / "src"))
     import stabilitytool_birdflight.aerodynamics.lifting_line as ff
+    from stabilitytool_birdflight.kinematics.lines import quarter_chord_line
 
     captured = {}
     original = ff.solve_circulation
@@ -85,8 +86,8 @@ def analyse(case, n_samples):
     tip, wing_len, aeff_max, aeff_peak_loc, aeff_34, aoa_kin_max = ([] for _ in range(6))
     f_vert, f_hor = [], []
     for t, x in zip(ts, X):
-        le, te = bird.wing_edges(bird.joint_angles(t))
-        line = bird.quarter_chord_line(le, te)[0]
+        le, te = bird.edges(t)
+        line = quarter_chord_line(le, te)[0]
         p = line[:, np.argmax(line[0])]            # right lifting-line tip, code frame
         tip.append((-(p[2] + WINGFRAME_POSITION[2]), p[0], -p[1]))  # x' rel. to G, y', z'
         wing_len.append(np.linalg.norm(p))         # shoulder -> tip distance

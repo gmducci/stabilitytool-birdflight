@@ -76,7 +76,7 @@ def get_aeroforces(self, x0, t):
             aereodynamic_forces : components of the aereod. forces and moments
         """
         [line, chordir, updir, chord,
-         v_kinematics] = self.get_lifting_line_kinematics(t)
+         v_kinematics] = self.geometry(t)
 
         # call the aereodynamic solver for the lifting line lifting_line_forces
         [Fx,

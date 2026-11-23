@@ -18,7 +18,7 @@ def test_birdwing_without_aero_or_flight():
                         axis_y=Joint(np.pi/6, np.pi/6, -np.pi/2)),
             wrist=Wrist(axis_y=Joint(-np.pi/6, np.pi/6, np.pi/2),
                         axis_z=Joint(0., 0., 0.)))
-        line, chordir, updir, chord, v_kin = wing.get_lifting_line_kinematics(0.05)
+        line, chordir, updir, chord, v_kin = wing.geometry(0.05)
         assert line.shape[0] == 3 and v_kin.shape[0] == 3
         loaded = [m for m in sys.modules
                   if m.startswith(("stabilitytool_birdflight.aerodynamics",

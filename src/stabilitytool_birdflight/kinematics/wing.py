@@ -24,12 +24,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from collections import namedtuple
+
 import numpy as np
-from .joints import Joint, Shoulder, Elbow, Wrist
-from .lines import smooth_line, smooth_quarter_chord_line, quarter_chord_naive, refine_line
-from .rotations import rotation_matrix, scaling_matrix
-from .feathers import (feather_geometry, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
-                     DEFAULT_FEATHER_PITCH_ANGLES)
+
+from .envelope import wing_edges
+from .feathers import (DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_PITCH_ANGLES,
+                       DEFAULT_FEATHER_SPREAD_ANGLES)
+from .joints import Elbow, JointAngles, Shoulder, Wrist
+from .lines import centre_point_velocity, merge_left_right, quarter_chord_line
+
+__all__ = ["Wing", "WingGeometry"]
+
+#: Lifting line of both wings at one instant (wing frame).
+WingGeometry = namedtuple("WingGeometry", [
+    "line",         # (3, N) lifting-line points, N odd (33 with the defaults)
+    "chord_dir",    # (3, N) chord directions at the points
+    "up_dir",       # (3, N) normal directions at the points
+    "chord",        # (N,) chords [m]
+    "velocity",     # (3, (N-1)/2) wing-motion velocity of the points line[:, 1:-1:2]
+])
 
 
 class Wing:
@@ -88,477 +102,39 @@ class Wing:
             self.elbow = elbow
 
     def joint_angles(self, t):
-
+        """``JointAngles`` at time ``t`` [rad]."""
         f = self.frequency
-        state_shoulder_x = self.shoulder.axis_x.angle(t, f)
-        state_shoulder_y = self.shoulder.axis_y.angle(t, f)
-        state_shoulder_z = self.shoulder.axis_z.angle(t, f)
-        # Elbow motion
-        state_elbow_x = self.elbow.axis_x.angle(t, f)
-        state_elbow_y = self.elbow.axis_y.angle(t, f)
-        # Wrist motion
-        state_wrist_y = self.wrist.axis_y.angle(t, f)
-        state_wrist_z = self.wrist.axis_z.angle(t, f)
+        return JointAngles(shoulder_x=self.shoulder.axis_x.angle(t, f),
+                           shoulder_y=self.shoulder.axis_y.angle(t, f),
+                           shoulder_z=self.shoulder.axis_z.angle(t, f),
+                           elbow_x=self.elbow.axis_x.angle(t, f),
+                           elbow_y=self.elbow.axis_y.angle(t, f),
+                           wrist_y=self.wrist.axis_y.angle(t, f),
+                           wrist_z=self.wrist.axis_z.angle(t, f))
 
-        wing_state = [state_shoulder_x, state_shoulder_z, state_shoulder_y, state_elbow_y, state_elbow_x, state_wrist_y, state_wrist_z]
-        return wing_state
+    def edges(self, t):
+        """Leading and trailing edges of the right wing at time ``t``."""
+        return wing_edges(self.joint_angles(t), self.arm_length, self.forearm_length,
+                          self.hand_length, self.feather_lengths,
+                          self.feather_spread_angles, self.feather_pitch_angles)
 
-    def wing_edges(self, wing_state):
-        shoulder_x, shoulder_z, shoulder_y, elbow_y, elbow_x, wrist_y, wrist_z = wing_state
-        [plumesrot, plumesvec] = feather_geometry(self.feather_lengths,
-                                        self.feather_spread_angles,
-                                        self.feather_pitch_angles)
-        dim_plumesrot0 = np.size(plumesrot[0])
+    def lifting_line(self, t):
+        """Lifting line of both wings joined across the body at time ``t``.
+
+        Returns ``line, chordir, updir, chord``.
         """
-        Assignment of the dimensions of the skeleton and the frame position
-        """
-
-        # Versor along y axis
-        ey = [0, 1, 0]
-
-        # Lenght of the first part of the wing skeleton
-        l1 = self.arm_length
-
-        # Lenght of the second part of the wing skeleton
-        l2 = self.forearm_length
-
-        # Lenght of the second third of the wing skeleton (l3 is used to connect l1 and l2)
-        l4 = self.hand_length
-
-        # Origin of the reference frame
-        origin = [0, 0, 0]
-
-        # Respective position of the end of the three parts of the skeleton
-        end1 = np.array([l1, 0, 0])
-        end2 = np.array([l2, 0, 0])
-        end4 = np.array([l4, 0, 0])
-
-        vec30 = np.array(end1) + np.array(end2) - np.array(origin) # Probably unused
-
-        """
-        Assignment of the points over the three parts of the skeleton, arm, forearm, hand respoectively
-        """
-        # Number of points over the arm
-        npoints_arm = 1
-
-        # Number of points over the forearm
-        npoints_forearm = 1
-
-        # Number of points over the hand
-        npoints_hand = 2
-
-        # Total number of point
-        nslice = npoints_arm + npoints_forearm + npoints_hand
-
-        # Distances from point to point for each part of the skeleton
-        delta_arm = l1/npoints_arm
-        delta_forearm = l2/npoints_forearm
-        delta_hand = l4/(npoints_hand-1)
-
-
-        # Routine for the xslice vector (values checked with Matlab code). Maybe write a function!
-        xslice = np.zeros(nslice)
-        for i in range(npoints_arm):
-            xslice[i] = 0 + (i*delta_arm)
-        for i in range(npoints_forearm):
-            xslice[i + npoints_arm] = l1 + (i*delta_forearm)
-        for i in range(npoints_hand):
-            xslice[i + npoints_arm + npoints_forearm] = l1 + l2 + (i*delta_hand)
-
-        # Index of feathers starting point (ask it for a more clear comment). CHECKED!
-        index = np.zeros(7)
-        index[0] = np.size(xslice)
-        index[1] = np.nonzero(xslice>=l1+l2+l4/2)[0][0]
-        index[2] = np.nonzero(xslice>=l1+l2)[0][0]
-        index[3] = np.nonzero(xslice>=l1+l2/2)[0][0]
-        index[4] = np.nonzero(xslice>=l1)[0][0]
-        index[5] = np.nonzero(xslice>=l1/2)[0][0]
-        index[6] = 1
-           # Ellipse thing (just double check to delete unnecessary things)
-        number_ellipses = 2
-        s = np.linspace(0,2*np.pi,number_ellipses + 1) # No idea but works
-        s = s[0:number_ellipses]
-        skz = .01
-        sky = .01
-        z = skz*np.cos(s)
-        y = sky*np.sin(s)
-        points = np.zeros((3 , nslice*number_ellipses))
-
-        # Weight thing, again ask to have a more clear comment
-        w1 = np.zeros(nslice*number_ellipses)
-        w2a = np.zeros(nslice*number_ellipses)
-        w2b = np.zeros(nslice*number_ellipses)
-        w3 = np.zeros(nslice*number_ellipses)
-        w4 = np.zeros(nslice*number_ellipses)
-        for j in range(nslice):
-            if xslice[j] < l1:
-                for k in range(number_ellipses):
-                    points[:,(j)*number_ellipses+k] = [xslice[j], y[k], z[k]]
-
-                facb = (z/skz + 1)/2
-                lrefcd = min(l1,l2)
-
-                if xslice[j] < l1-lrefcd/2:
-                    faccd1 = 1
-                else:
-                    faccd1 = 0.5*(1-np.sin(np.pi*(xslice[j]-l1)/lrefcd))
-
-                faccd2 = 1-faccd1
-                fac2a = 1
-                fac2b = 0
-                w1[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd1
-                w2a[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd2*fac2a
-                w2b[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd2*fac2b
-                w3[j*number_ellipses:(j+1)*number_ellipses] = (1-facb)
-                w4[j*number_ellipses:(j+1)*number_ellipses] = 0
-
-            elif xslice[j] < l1 + l2:
-                for k in range(number_ellipses):
-                    points[:,(j)*number_ellipses+k] = [xslice[j], y[k], z[k]]
-
-                facb = (z/skz + 1)/2
-                lrefcd = min(l1,l2)
-                if xslice[j] < l1+lrefcd/2:
-                    faccd2 = 0.5*(1+np.sin(np.pi*(xslice[j]-l1)/lrefcd))
-                else:
-                    faccd2 = 1
-
-                faccd1 = 1-faccd2
-                fac2b = (xslice[j]-l1)/l2
-                fac2a = 1-fac2b
-                lrefpg = min(l2,l4)
-
-                if xslice[j] < l1+l2-lrefpg/2:
-                    facpg2 = 1
-                else:
-                    facpg2 = 0.5*(1-np.sin(np.pi*(xslice[j]-(l1+l2))/lrefpg))
-
-                facpg4 = 1-facpg2
-
-                w1[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd1*facpg2
-                w2a[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd2*fac2a*facpg2
-                w2b[j*number_ellipses:(j+1)*number_ellipses] = facb*faccd2*fac2b*facpg2
-                w3[j*number_ellipses:(j+1)*number_ellipses] = (1-facb)*facpg2
-                w4[j*number_ellipses:(j+1)*number_ellipses] = facpg4
-            else:
-                for k in range(number_ellipses):
-                    points[:,(j)*number_ellipses+k] = [xslice[j], y[k], z[k]]
-
-                facb = (z/skz + 1)/2
-                fac2a = 0
-                fac2b = 1
-                lrefpg = min(l2,l4)
-
-                if xslice[j] < l1+l2+lrefpg/2:
-                    facpg4 = 0.5*(1+np.sin(np.pi*(xslice[j]-(l1+l2))/lrefpg))
-                else:
-                    facpg4 = 1
-
-                facpg2 = 1-facpg4
-
-                w1[j*number_ellipses:(j+1)*number_ellipses] = 0
-                w2a[j*number_ellipses:(j+1)*number_ellipses] = facb*facpg2*fac2a
-                w2b[j*number_ellipses:(j+1)*number_ellipses] = facb*facpg2*fac2b
-                w3[j*number_ellipses:(j+1)*number_ellipses] = (1-facb)*facpg2
-                w4[j*number_ellipses:(j+1)*number_ellipses] = facpg4
-
-
-
-        npts = nslice*number_ellipses
-
-        pts = points
-
-        """
-        Rotation routine for the three parts of the skeleton (shoulder, elbow, hand)
-        """
-        rot1X = rotation_matrix(shoulder_x,'x')
-        rot1Z = rotation_matrix(shoulder_z,'z')
-        rot1Y = rotation_matrix(shoulder_y,'y')
-        rot1 = np.array(rot1X).dot(np.array(rot1Z)).dot(np.array(rot1Y))
-        ey1 = np.array(rot1).dot(np.array(ey))
-
-        rot2relY = rotation_matrix(elbow_y,'y')
-        rot2relX = rotation_matrix(elbow_x,'x')
-        rot2b = np.array(rot1).dot(np.array(rot2relY)).dot(np.array(rot2relX))
-        rot2a = np.array(rot1).dot(np.array(rot2relY))
-
-        rot4relY = rotation_matrix(wrist_y,'y')
-        rot4relZ = rotation_matrix(wrist_z,'z')
-        rot4 = np.array(rot2b).dot(np.array(rot4relY)).dot(np.array(rot4relZ))
-
-
-        """
-        Evaluation of the bones position
-        """
-        endd1 = np.array(rot1).dot(np.array(end1))
-        endd2 = np.array(rot2a).dot(np.array(end2))+np.array(endd1)
-        endd4 = np.array(rot4).dot(np.array(end4))+np.array(endd2)
-        vec3 = np.array(endd2)-np.array(origin)
-
-        ex3 = vec3/np.linalg.norm(vec3)
-        ey3 = ey1
-        ez3 = np.array([ex3[1]*ey3[2]-ex3[2]*ey3[1], ex3[2]*ey3[0]-ex3[0]*ey3[2], ex3[0]*ey3[1]-ex3[1]*ey3[0]])
-        rot3 = np.array([ex3,ey3,ez3])
-        rot3 = rot3.transpose()
-        kx = np.linalg.norm(vec3)/np.linalg.norm(vec30)
-        comp3 = scaling_matrix(kx,'x')
-
-
-        """
-        Routine to find skin points
-        """
-
-        for j in range(npts):
-            pt = np.array(points[:,j])
-            pt1 = rot1.dot(pt)
-            pt2a = rot2a.dot((pt-end1)) + endd1
-            pt2b = rot2b.dot((pt-end1)) + endd1
-            pt3 = rot3.dot(comp3).dot(pt)
-            pt4 = rot4.dot((pt-(end1+end2))) + endd2
-
-            pts[:,j] = pt1*w1[j] + pt2a*w2a[j] + pt2b*w2b[j] + pt3*w3[j] + pt4*w4[j]
-
-        """
-        Routine to find main feathers
-        """
-        vecpss = np.zeros((3,dim_plumesrot0))
-        startp = np.zeros((3,np.size(plumesrot[0])))
-
-        for i in range(np.size(plumesrot[0])):
-            if i == 0:
-                prerot = rot4
-            elif i == 1:
-                prerot = rot4.dot(rotation_matrix(wrist_z/4,'x'))
-            elif i == 2:
-                prerot = rot2b.dot(rotation_matrix(wrist_y/2,'y')).dot(rotation_matrix(-wrist_z/2,'x'))
-            elif i == 3:
-                prerot = rot2a.dot(rotation_matrix(elbow_x/2,'x')).dot(rotation_matrix(wrist_y/2,'y')).dot(rotation_matrix(-wrist_z/4,'x'))
-            elif i == 4:
-                prerot = rot1.dot(rotation_matrix(elbow_y/2,'y'))
-            elif i == 5:
-                prerot = rot1.dot(rotation_matrix(elbow_y/4,'y'))
-            elif i == 6:
-                prerot = rot1
-
-            rY = rotation_matrix(plumesrot[0,i],'y')
-            rX = rotation_matrix(plumesrot[1,i],'x')
-            rot = prerot.dot(rY).dot(rX)
-            vecpss[:,i] = np.dot(rot,plumesvec[:,i])
-            element = index[i]
-            column = int((index[i]-1)*(number_ellipses))
-            startp[0,i] = pts[0][column]
-            startp[1,i] = pts[1][column]
-            startp[2,i] = pts[2][column]
-
-        """
-        Interpolation Routine
-        """
-        main1 = ((xslice[xslice >= l1+l2+l4/2]-(l1+l2+l4/2))/(l4/2))
-        main1 = main1[:,np.newaxis].T
-        main2 = ((xslice[(xslice >= l1+l2) & (xslice < l1+l2+l4/2)]-(l1+l2))/(l4/2))
-        main2 = main2[:,np.newaxis].T
-        abras1 = ((xslice[(xslice >=l1+l2/2) & (xslice <l1+l2)]-(l1+l2/2))/(l2/2))
-        abras1 = abras1[:,np.newaxis].T
-        abras2 = ((xslice[(xslice >=l1) & (xslice <l1+l2/2)]-(l1))/(l2/2))
-        abras2 = abras2[:,np.newaxis].T
-        bras1 = ((xslice[(xslice >=l1/2) & (xslice <l1)]-(l1/2))/(l1/2))
-        bras1 = bras1[:,np.newaxis].T
-        bras2 = (xslice[xslice <l1/2]/(l1/2))
-        bras2 = bras2[:,np.newaxis].T
-
-        """
-        Feathers Routine
-        """
-        pm1 = vecpss[:,0][:,np.newaxis].dot(main1)+vecpss[:,1][:,np.newaxis].dot(1-main1)
-        pm2 = vecpss[:,1][:,np.newaxis].dot(main2)+vecpss[:,2][:,np.newaxis].dot(1-main2)
-        pa1 = vecpss[:,2][:,np.newaxis].dot(abras1)+vecpss[:,3][:,np.newaxis].dot(1-abras1)
-        pa2 = vecpss[:,3][:,np.newaxis].dot(abras2)+vecpss[:,4][:,np.newaxis].dot(1-abras2)
-        pb1 = vecpss[:,4][:,np.newaxis].dot(bras1)+vecpss[:,5][:,np.newaxis].dot(1-bras1)
-        pb2 = vecpss[:,5][:,np.newaxis].dot(bras2)+vecpss[:,6][:,np.newaxis].dot(1-bras2)
-
-        """
-        Store the feathers in a single vector following the structure:
-
-                [pb2(0,0),..,pb2(0,n),pb1(0,0),..,pb1(0,n),pa2(0,0),..,pa2(0,k),pa1(0,0),..,pa1(0,k),pm2(0,0),..,pm2(0,j),pm1(0,0),..,pm1(0,j)]
-        vecps = [pb2(1,0),..,pb2(1,n),pb1(1,0),..,pb1(1,n),pa2(1,0),..,pa2(1,k),pa1(1,0),..,pa1(1,k),pm2(1,0),..,pm2(1,j),pm1(1,0),..,pm1(1,j)]
-                [pb2(2,0),..,pb2(2,n),pb1(2,0),..,pb1(2,n),pa2(2,0),..,pa2(2,k),pa1(2,0),..,pa1(2,k),pm2(2,0),..,pm2(2,j),pm1(2,0),..,pm1(2,j)]
-
-        Matrix concatenation
-        """
-        vecps = np.c_[pb2, pb1, pa2, pa1, pm2, pm1]
-
-
-        trailingedge = np.zeros((3,nslice))
-
-        xpt = np.zeros(3)
-        ypt = np.zeros(3)
-        zpt = np.zeros(3)
-
-        for j in range(nslice):
-            xpt = np.array([pts[0,(j)*number_ellipses], pts[0,j*number_ellipses+1], pts[0,(j)*number_ellipses]])
-            ypt = np.array([pts[1,(j)*number_ellipses], pts[1,j*number_ellipses+1], pts[1,(j)*number_ellipses]])
-            zpt = np.array([pts[2,(j)*number_ellipses], pts[2,j*number_ellipses+1], pts[2,(j)*number_ellipses]])
-
-            vecp = np.array(vecps[:,j])
-
-            trailingedge[0,j] = xpt[0]+vecp[0]
-            trailingedge[1,j] = ypt[0]+vecp[1]
-            trailingedge[2,j] = zpt[0]+vecp[2]
-
-        leadingedge = np.c_[pts[:,int(number_ellipses/2)::int(number_ellipses)],trailingedge[:,-1]]
-        return leadingedge, trailingedge
-    def quarter_chord_line(self, leadingedge, trailingedge):
-        """
-        === Call of wing_envelope function. Given the kinematics, the wing shape is found ===
-        """
-
-        nlete = 16
-
-        leadingedge = smooth_line(leadingedge, nlete)
-        trailingedge = smooth_line(trailingedge, nlete)
-
-        [line, chord_leadingedge, chord_trailingedge] = quarter_chord_naive(leadingedge, trailingedge)
-
-        """"
-        ============= PLOT ROUTINE =============
-        Here in the original code there is a function that prints out on the screen wing plots.
-        It is now omitted, and there will be implemented later in a second time
-        ========================================
-        """
-
-        tol = 0.1
-        nmax = 10
-        a = tol + 1
-        chg = tol + 1
-        it = 1
-
-        while a > tol and it < nmax:
-            [line, chord_leadingedge, chord_trailingedge, a] = refine_line(line,chord_leadingedge,
-                                                            chord_trailingedge,leadingedge,trailingedge,it)
-
-            chg = np.c_[chg, a]
-
-            it = it + 1
-
-        [lifting_line, chord_leadingedge, chord_trailingedge] = smooth_quarter_chord_line(line, chord_leadingedge, chord_trailingedge)
-
-        """
-        Output lifting_line, chord_leadingedge, chord_trailingedge CHECKED
-        """
-        line_dummy = np.copy(lifting_line)
-        nl = np.size(line[0])
-        chord_direction = np.zeros((3,nl))
-        updir = np.zeros((3,nl))
-        chord = np.zeros((nl))
-
-    # =============================================================================
-    #     Evaluating the chord and its direction
-    #     For every slice, it's calculated the distance btw Lead. edge and Trail.
-    #     edge (chord_distance), and then the modulus, so that the versor is
-    #     identified.
-    # =============================================================================
-
-        for i in range(nl):
-
-            chord_distance = (chord_trailingedge[:,i] - chord_leadingedge[:,i]) + 1e-20
-            chord[i] = np.linalg.norm(chord_distance)
-            #chord = chord[:,np.newaxis]
-            chord_direction[:,i] = chord_distance/chord[i]
-
-            if i == 0:
-                linevec = line[:,1] - line[:,0]
-            elif i == (nl - 1):
-                linevec = line[:,-1] - line[:,-2]
-            else:
-                linevec = line[:,i+1] - line[:,i-1]
-
-            linevec = linevec/np.linalg.norm(linevec)
-            updir[:,i] = np.cross(chord_direction[:,i], linevec)  # Different value in the last iteration
-
-        updir_dummy = np.copy(updir)
-        chord_direction_dummy = np.copy(chord_direction)
-        chord_dummy = np.copy(chord)
-        # Left Wing
-
-        line_left = np.fliplr(line_dummy)
-        up_direction_left = np.fliplr(updir_dummy)
-        chord_direction_left = np.fliplr(chord_direction_dummy)
-        chord_left = chord_dummy[::-1]
-
-        line_left[0,:] = np.negative(line_left[0,:])
-        chord_direction_left[0,:] = np.negative(chord_direction_left[0,:])
-        up_direction_left[0,:] = np.negative(up_direction_left[0,:])
-
-        sumvector = np.zeros((1,nl))
-        for i in range(nl):
-            if i < nl-1:
-                sumvector[0,i] = np.sum((lifting_line[:,i+1] - lifting_line[:,i])**2)
-            else:
-                sumvector[0,i] = np.sum((lifting_line[:,-1] - lifting_line[:, -2])**2)
-
-
-        dx = np.mean(np.sqrt(sumvector))
-
-        return lifting_line, updir, chord_direction, chord, line_left, up_direction_left, chord_direction_left, chord_left, dx
-
-
-
-    def merge_left_right(self, line_package):
-        line_r,updir_r,chordir_r,chord_r,line_l,updir_l,chordir_l,chord_l, dx = line_package
-        x_ep = self.body_half_width
-        nmid = int(np.ceil(2*x_ep/dx))
-        line_r[0,:] = line_r[0,:] + x_ep
-        line_l[0,:] = line_l[0,:] - x_ep
-
-        xmid = np.linspace(line_l[0,-1],line_r[0,0],nmid)
-        length_xmid = np.size(xmid)
-        line_mid = np.array([xmid, line_r[1,0]*np.ones(np.size(xmid)), line_r[2,0]*np.ones(np.size(xmid))])
-        chordir_mid = np.array([chordir_r[:,0] for i in range(np.size(xmid))]).T
-        updir_mid = np.array([updir_r[:,0] for i in range(np.size(xmid))]).T
-        chord_mid = np.zeros(length_xmid)
-        chord_mid[:] = chord_r[0]*np.ones(length_xmid)
-
-        line = np.c_[line_l,line_mid[:,1:-1],line_r]
-        chordir = np.c_[chordir_l, chordir_mid[:,1:-1], chordir_r]
-        updir = np.c_[updir_l, updir_mid[:,1:-1], updir_r]
-        chord = np.concatenate([chord_l, chord_mid[1:-1]/1e4, chord_r])
-        return line, chordir, updir, chord
-
-
-    def get_lifting_line_kinematics(self, t):
-        """Merged lifting line at time t and the velocity of its centre points.
-
-        Returns ``line, chordir, updir, chord, v_kin``; the velocity is a
-        backward finite difference over ``kinematic_dt``.
+        leadingedge, trailingedge = self.edges(t)
+        return merge_left_right(quarter_chord_line(leadingedge, trailingedge),
+                                self.body_half_width)
+
+    def geometry(self, t):
+        """``WingGeometry`` at time ``t``.
+
+        The velocity of the lifting-line centre points is a backward finite
+        difference over ``kinematic_dt``.
         """
         dt = self.kinematic_dt
-        wing_state = self.joint_angles(t)
-        wing_state_dt = self.joint_angles(t-dt)
-
-        [leadingedge,
-         trailingedge] = self.wing_edges(wing_state)
-
-        [leadingedge_dt,
-         trailingedge_dt] = self.wing_edges(wing_state_dt)
-
-        lifting_line =  self.quarter_chord_line(leadingedge,
-                                             trailingedge)
-
-        lifting_line_dt =  self.quarter_chord_line(leadingedge_dt,
-                                                trailingedge_dt)
-
-        [line, chordir, updir, chord] = self.merge_left_right(lifting_line)
-
-        [line_dt, _, _, _] = self.merge_left_right(lifting_line_dt)
-
-        v_kinematics = centre_point_velocity(line, line_dt, dt)
-        return line, chordir, updir, chord, v_kinematics
-
-
-def centre_point_velocity(line, line_dt, dt):
-
-       line_c = line[:, 1:-1:2]
-       line_c2 = line_dt[:, 1:-1:2]
-       v_kin =  (line_c - line_c2)/dt
-
-       return v_kin
+        line, chordir, updir, chord = self.lifting_line(t)
+        line_dt, _, _, _ = self.lifting_line(t - dt)
+        return WingGeometry(line, chordir, updir, chord,
+                            centre_point_velocity(line, line_dt, dt))

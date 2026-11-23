@@ -22,8 +22,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from collections import namedtuple
+
 import numpy as np
-import math as m
+
+#: Joint angles of the wing at one instant [rad].
+JointAngles = namedtuple("JointAngles", ["shoulder_x", "shoulder_y", "shoulder_z",
+                                         "elbow_x", "elbow_y", "wrist_y", "wrist_z"])
 
 class Joint:
     """Harmonic joint angle q(t) = offset + amplitude*sin(2*pi*f*t + phase)."""
