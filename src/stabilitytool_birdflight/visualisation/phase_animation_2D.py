@@ -31,7 +31,7 @@ from scipy.integrate import odeint  # Import odeint
 
 def LorentzEqs(x0, t):
     """
-    Lorentz equations
+    Lorenz equations
     Alternatively (and highly recommended) load the data of your simulation
     insted of re-integrate the system.
     """

@@ -205,7 +205,9 @@ def case_lorenz():
     mf = _toy_import()
     x = [10., 10., 3.6]
     # Example calls Lorentz(a=10, b=28, c=8/3); the class takes (sigma, r, b).
-    model = mf.Lorentz(sigma=10, r=28, b=8 / 3)
+    # The class is Lorentz upstream, Lorenz in the package (Stage 7).
+    lorenz = mf.Lorenz if _target() == "package" else mf.Lorentz
+    model = lorenz(sigma=10, r=28, b=8 / 3)
     ms_obj = mf.MultipleShootingPeriod(x, M=2, period_guess=10., t_steps=50000,
                                        model=model, option_jacobian='numerical')
     # Example calls .lma(5.); SolverPeriod.lma() takes no argument.

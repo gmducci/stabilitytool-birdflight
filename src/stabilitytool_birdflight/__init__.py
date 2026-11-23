@@ -23,7 +23,7 @@ _LAZY = {
     "SaveData": ".utilities.save_data",
     "RedoxModel": ".dynamics.systems.redox",
     "Rossler": ".dynamics.systems.rossler",
-    "Lorentz": ".dynamics.systems.lorenz",
+    "Lorenz": ".dynamics.systems.lorenz",
     "ForcedVanDerPol": ".dynamics.systems.van_der_pol",
     "rk2": ".dynamics.integrators",
     "rk3": ".dynamics.integrators",

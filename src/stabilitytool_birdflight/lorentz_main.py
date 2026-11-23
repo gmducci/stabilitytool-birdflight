@@ -23,7 +23,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.dynamics.systems.lorenz import Lorentz
+from stabilitytool_birdflight.dynamics.systems.lorenz import Lorenz
 from stabilitytool_birdflight.dynamics.lyapunov import LyapunovExponents
 from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod
@@ -40,7 +40,7 @@ fig1 = plt.figure(1)
 
 for i in range(len(r_values)):
     # Creating the object containing the eqs
-    mymodel = Lorentz(sigma=10, r=r_values[i], b=8/3)
+    mymodel = Lorenz(sigma=10, r=r_values[i], b=8/3)
 
     x = np.sqrt(mymodel.b*(mymodel.r-1))
     y = x

@@ -29,7 +29,7 @@ import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 from scipy.integrate import odeint
 
-def Lorentz(initial_value, t):
+def Lorenz(initial_value, t):
     a = 10
     b = 28
     c = 8/3
@@ -54,8 +54,8 @@ initial_value_lorentz = np.array([-2.39918211, -4.38992764, 10.22727544])
 initial_value_lorentz_perturbed = initial_value_lorentz[:] + initial_value_lorentz[:]*10e-3
 timestep = 4000
 tArray = np.linspace(0, 30, timestep) # Time integration discretisation
-test = odeint(Lorentz, initial_value_lorentz,tArray)  # Numerical Integration of the limit cycle unperturbed
-perturbed_orbit = odeint(Lorentz, initial_value_lorentz_perturbed, tArray) #Numerical Integration of the limit cycle unperturbed
+test = odeint(Lorenz, initial_value_lorentz,tArray)  # Numerical Integration of the limit cycle unperturbed
+perturbed_orbit = odeint(Lorenz, initial_value_lorentz_perturbed, tArray) #Numerical Integration of the limit cycle unperturbed
 
 x = test[:,0]
 y = test[:,1]

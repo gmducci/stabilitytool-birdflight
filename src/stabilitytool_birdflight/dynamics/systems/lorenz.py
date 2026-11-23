@@ -25,7 +25,7 @@ limitations under the License.
 import numpy as np
 
 
-class Lorentz:
+class Lorenz:
     def __init__(self, sigma=None, r=None, b=None):
 
         self.sigma = sigma
