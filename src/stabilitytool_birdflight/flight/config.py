@@ -132,5 +132,6 @@ class BirdCaseConfig:
 
     def solve(self, verbose=False, log_stream=None):
         """Find the limit cycle; returns a ``dynamics.result.LimitCycleResult``."""
-        return self.solver.solve(self.build_model(), verbose=verbose,
-                                 log_stream=log_stream)
+        from ..dynamics.limit_cycle import find_limit_cycle
+        return find_limit_cycle(self.build_model(), self.solver, verbose=verbose,
+                                log_stream=log_stream)

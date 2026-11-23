@@ -13,6 +13,7 @@ import pytest
 
 from hopf import Hopf
 from stabilitytool_birdflight.dynamics.config import SolverConfig
+from stabilitytool_birdflight.dynamics.limit_cycle import find_limit_cycle
 from stabilitytool_birdflight.dynamics.shooting import KnownPeriodShooting, UnknownPeriodShooting
 from stabilitytool_birdflight.dynamics.solver import ConvergenceError
 
@@ -61,8 +62,8 @@ def test_known_period_monodromy_converges_with_finer_intervals():
     """
     model = Hopf(); errors = []
     for M in (4, 8, 16):
-        res = SolverConfig(x0=X0, method="known_period", period=model.period, points=M,
-                           t_steps=200, tolerance=1e-9).solve(model)
+        res = find_limit_cycle(model, SolverConfig(x0=X0, method="known_period", period=model.period, points=M,
+                           t_steps=200, tolerance=1e-9))
         errors.append(abs(res.multipliers[0] - 1))
     assert all(a > b for a, b in zip(errors, errors[1:])), errors   # 2.7e-3, 9.5e-4, 3.0e-4
 
@@ -83,8 +84,8 @@ def test_numerical_jacobian_with_zero_coordinate(cls):
 @pytest.mark.parametrize("integrator,unit_tol", [("rk", 5e-5), ("odeint", 1e-7)])   # 8.7e-6, 5e-9
 def test_unknown_period_solver(integrator, unit_tol):
     model = Hopf()
-    res = SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=6.0,
-                       t_steps=200, integrator=integrator, tolerance=1e-9).solve(model)
+    res = find_limit_cycle(model, SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=6.0,
+                       t_steps=200, integrator=integrator, tolerance=1e-9))
     check_cycle(res, model, 1e-7)
     assert abs(res.period - model.period) < 1e-6 * model.period
     exact = model.multipliers
@@ -96,8 +97,8 @@ def test_unknown_period_solver(integrator, unit_tol):
 
 def test_unknown_period_solver_other_frequency():
     model = Hopf(omega=2.0, lam=1.0)
-    res = SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=3.3,
-                       t_steps=200, integrator="odeint", tolerance=1e-9).solve(model)
+    res = find_limit_cycle(model, SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=3.3,
+                       t_steps=200, integrator="odeint", tolerance=1e-9))
     assert abs(res.period - np.pi) < 1e-6
     assert np.allclose(res.multipliers, model.multipliers, rtol=1e-3, atol=1e-7)
 
@@ -105,8 +106,8 @@ def test_unknown_period_solver_other_frequency():
 @pytest.mark.parametrize("jacobian,unit_tol", [("analytical", 1e-2), ("numerical", 3e-3)])  # 2.7e-3, 7.4e-4
 def test_known_period_solver(jacobian, unit_tol):
     model = Hopf()
-    res = SolverConfig(x0=X0, method="known_period", period=model.period, points=4,
-                       t_steps=200, jacobian=jacobian, tolerance=1e-9).solve(model)
+    res = find_limit_cycle(model, SolverConfig(x0=X0, method="known_period", period=model.period, points=4,
+                       t_steps=200, jacobian=jacobian, tolerance=1e-9))
     check_cycle(res, model, 1e-7)
     assert res.period == model.period
     assert abs(res.multipliers[0] - 1) < unit_tol
@@ -117,6 +118,6 @@ def test_known_period_solver(jacobian, unit_tol):
 
 def test_solver_reports_non_convergence():
     with pytest.raises(ConvergenceError, match="did not converge"):
-        SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=6.0,
+        find_limit_cycle(Hopf(), SolverConfig(x0=X0, method="unknown_period", points=4, period_guess=6.0,
                      t_steps=200, integrator="odeint", tolerance=1e-14,
-                     max_iterations=2).solve(Hopf())
+                     max_iterations=2))

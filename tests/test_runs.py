@@ -13,6 +13,7 @@ import pytest
 
 from stabilitytool_birdflight import cli
 from stabilitytool_birdflight.dynamics.config import SolverConfig
+from stabilitytool_birdflight.dynamics.limit_cycle import find_limit_cycle
 from stabilitytool_birdflight.dynamics.result import LimitCycleResult
 from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
 from stabilitytool_birdflight.flight.config import BirdCaseConfig
@@ -25,9 +26,9 @@ CASE = Path(__file__).resolve().parents[1] / "examples" / "configs" / "bird_main
 
 @pytest.fixture(scope="module")
 def toy_result():
-    return SolverConfig(x0=[.1, 5., 3.6], method="unknown_period", points=30,
+    return find_limit_cycle(Rossler(a=0.2, b=0.2, c=5.7), SolverConfig(x0=[.1, 5., 3.6], method="unknown_period", points=30,
                         period_guess=5., t_steps=5000,
-                        integrator="odeint").solve(Rossler(a=0.2, b=0.2, c=5.7))
+                        integrator="odeint"))
 
 
 @pytest.fixture

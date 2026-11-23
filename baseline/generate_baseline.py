@@ -113,9 +113,10 @@ def _bird_import():
 
 
 def _package_solve(model, **solver):
-    """Package target: solve through SolverConfig -> LimitCycleResult."""
+    """Package target: find_limit_cycle -> LimitCycleResult."""
     from stabilitytool_birdflight.dynamics.config import SolverConfig
-    return SolverConfig(**solver).solve(model, verbose=True)
+    from stabilitytool_birdflight.dynamics.limit_cycle import find_limit_cycle
+    return find_limit_cycle(model, SolverConfig(**solver), verbose=True)
 
 
 def case_rossler():

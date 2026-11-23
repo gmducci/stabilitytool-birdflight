@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from stabilitytool_birdflight.dynamics.config import SolverConfig
+from stabilitytool_birdflight.dynamics.limit_cycle import find_limit_cycle
 from stabilitytool_birdflight.dynamics.model import ODEModel, get_dimension, get_jacobian
 from stabilitytool_birdflight.dynamics.result import LimitCycleResult
 from stabilitytool_birdflight.dynamics.systems.van_der_pol import ForcedVanDerPol
@@ -34,7 +35,7 @@ def rel(a, b):
 
 @pytest.mark.parametrize("name,model,settings,rtol", TOY_CASES, ids=[c[0] for c in TOY_CASES])
 def test_toy_regression_through_solver_config(name, model, settings, rtol):
-    res = SolverConfig(**settings).solve(model())
+    res = find_limit_cycle(model(), SolverConfig(**settings))
     ref = np.load(DATA / f"{name}.npz")
     assert isinstance(res, LimitCycleResult) and res.converged
     assert res.n_iterations == int(ref["n_iterations"])
@@ -46,7 +47,7 @@ def test_toy_regression_through_solver_config(name, model, settings, rtol):
 
 
 def test_floquet_exponents():
-    res = SolverConfig(**TOY_CASES[0][2]).solve(TOY_CASES[0][1]())
+    res = find_limit_cycle(TOY_CASES[0][1](), SolverConfig(**TOY_CASES[0][2]))
     expected = np.log(res.multipliers.astype(complex)) / res.period
     assert np.allclose(res.floquet_exponents, expected)
 

@@ -16,6 +16,9 @@ except _PackageNotFoundError:  # running from a source tree without installation
     __version__ = "unknown"
 
 _LAZY = {
+    "find_limit_cycle": ".dynamics.limit_cycle",
+    "SolverConfig": ".dynamics.config",
+    "LimitCycleResult": ".dynamics.result",
     "KnownPeriodShooting": ".dynamics.shooting",
     "UnknownPeriodShooting": ".dynamics.shooting",
     "levenberg_marquardt": ".dynamics.solver",
