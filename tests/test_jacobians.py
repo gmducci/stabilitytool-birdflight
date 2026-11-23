@@ -4,12 +4,12 @@ import pytest
 
 from hopf import Hopf
 from stabilitytool_birdflight.dynamics.model import get_jacobian
-from stabilitytool_birdflight.dynamics.systems.goodwin_model import GoodwinModel
-from stabilitytool_birdflight.dynamics.systems.isothermal_reaction import IsothermalReaction
 from stabilitytool_birdflight.dynamics.systems.lorenz import Lorenz
 from stabilitytool_birdflight.dynamics.systems.redox import RedoxModel
 from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
-from stabilitytool_birdflight.dynamics.systems.torus import Torus
+from systems.goodwin import GoodwinModel                # examples/systems
+from systems.isothermal_reaction import IsothermalReaction
+from systems.torus import Torus
 
 
 def central_difference(f, x, t, h=1e-6):

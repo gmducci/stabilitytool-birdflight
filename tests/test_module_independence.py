@@ -37,10 +37,7 @@ def imported_subpackages(path, module):
 def test_module_does_not_import_siblings(module):
     offenders = {}
     for path in sorted((PKG / module).rglob("*.py")):
-        try:
-            bad = imported_subpackages(path, module) & FORBIDDEN_FOR[module]
-        except SyntaxError:
-            continue  # dynamics/systems/jaschinski.py: known broken file
+        bad = imported_subpackages(path, module) & FORBIDDEN_FOR[module]
         if bad:
             offenders[str(path.relative_to(PKG))] = sorted(bad)
     assert not offenders, offenders

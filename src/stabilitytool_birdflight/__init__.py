@@ -31,7 +31,6 @@ _LAZY = {
     "rk3": ".dynamics.integrators",
     "rk4": ".dynamics.integrators",
     "largest_lyapunov_exponent": ".dynamics.lyapunov",
-    "Plot": ".utils.mf_plots",
 }
 
 __all__ = ["__version__", *_LAZY]

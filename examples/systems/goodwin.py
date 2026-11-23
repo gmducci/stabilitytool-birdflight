@@ -1,5 +1,5 @@
 '''
-file goodwin_model.py
+file goodwin.py
 @author Gianmarco Ducci, Marta del Olmo
 @copyright Copyright © UCLouvain 2020
 
