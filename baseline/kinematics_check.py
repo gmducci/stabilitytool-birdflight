@@ -43,6 +43,7 @@ WINGFRAME_POSITION = np.array([0.0, 0.0, -0.05])  # upstream default, code frame
 
 def build_bird(amplitude_deg):
     from stabilitytool_birdflight.flight.bird import BirdModel
+    from stabilitytool_birdflight.kinematics.wing import Wing
     from stabilitytool_birdflight.kinematics.joints import Shoulder, Elbow, Wrist, Joint
     d = np.deg2rad
     shoulder = Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
@@ -52,7 +53,7 @@ def build_bird(amplitude_deg):
                   axis_y=Joint(np.pi / 6, np.pi / 6, -np.pi / 2))
     wrist = Wrist(axis_y=Joint(-np.pi / 6, np.pi / 6, np.pi / 2),
                   axis_z=Joint(0., 0., 0.))
-    return BirdModel(shoulder=shoulder, elbow=elbow, wrist=wrist)
+    return BirdModel(Wing(shoulder=shoulder, elbow=elbow, wrist=wrist))
 
 
 def analyse(case, n_samples):
@@ -86,13 +87,13 @@ def analyse(case, n_samples):
     tip, wing_len, aeff_max, aeff_peak_loc, aeff_34, aoa_kin_max = ([] for _ in range(6))
     f_vert, f_hor = [], []
     for t, x in zip(ts, X):
-        le, te = bird.edges(t)
+        le, te = bird.wing.edges(t)
         line = quarter_chord_line(le, te)[0]
         p = line[:, np.argmax(line[0])]            # right lifting-line tip, code frame
         tip.append((-(p[2] + WINGFRAME_POSITION[2]), p[0], -p[1]))  # x' rel. to G, y', z'
         wing_len.append(np.linalg.norm(p))         # shoulder -> tip distance
 
-        _, Fy, Fz, _, F_tail, *_ = bird.get_aeroforces(x, t)
+        _, Fy, Fz, _, F_tail, *_ = bird.forces(x, t)
         theta = x[3]
         Xb, Zb = -Fz, -Fy - F_tail                 # body-frame force (x' fwd, z' down)
         f_vert.append(Xb * np.sin(theta) - Zb * np.cos(theta))   # inertial, up

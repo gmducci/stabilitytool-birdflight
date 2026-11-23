@@ -9,6 +9,7 @@ import yaml
 
 from stabilitytool_birdflight.configio import ConfigError
 from stabilitytool_birdflight.flight.bird import BirdModel
+from stabilitytool_birdflight.kinematics.wing import Wing
 from stabilitytool_birdflight.flight.config import BirdCaseConfig
 from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
 
@@ -47,18 +48,18 @@ def test_degrees_convert_exactly_to_upstream_radians():
 def test_config_bird_equals_hand_built_bird():
     """Same RHS as BirdModel built like upstream main.py (all defaults)."""
     d = np.deg2rad
-    hand = BirdModel(
+    hand = BirdModel(Wing(
         shoulder=Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
                           axis_y=Joint(-d(19), d(20), np.pi / 2),
                           axis_z=Joint(0, d(44), np.pi)),
         elbow=Elbow(axis_x=Joint(0., np.pi / 6, -np.pi / 2),
                     axis_y=Joint(np.pi / 6, np.pi / 6, -np.pi / 2)),
         wrist=Wrist(axis_y=Joint(-np.pi / 6, np.pi / 6, np.pi / 2),
-                    axis_z=Joint(0., 0., 0.)))
+                    axis_z=Joint(0., 0., 0.))))
     cfg = BirdCaseConfig.load(REFERENCE).build_model()
     x, t = np.array([18.67, -2.15, -0.12, -0.116]), 0.07
     with contextlib.redirect_stdout(io.StringIO()):
-        for name in ("get_aeroforces", "dynamics", "get_stability_matrix"):
+        for name in ("forces", "dynamics", "jacobian"):
             a = np.asarray(getattr(hand, name)(x, t), float)
             b = np.asarray(getattr(cfg, name)(x, t), float)
             assert np.array_equal(a, b), name

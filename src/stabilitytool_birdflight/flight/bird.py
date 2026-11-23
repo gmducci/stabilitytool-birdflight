@@ -3,6 +3,8 @@ file bird.py
 @author Victor Colognesi, Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
 Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
+Stage 7: BirdModel holds a Wing (composition) instead of inheriting from it;
+its parameters are constructor arguments.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -23,81 +25,80 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
+
+from ..aerodynamics.config import AerodynamicsConfig
 from ..kinematics.wing import Wing
-from .bird_dynamics import dynamics, get_aeroforces, get_stability_matrix
+from .equations import longitudinal_rhs, stability_matrix
+from .forces import aerodynamic_forces
+
+__all__ = ["BirdModel"]
 
 
-class BirdModel(Wing):
+class BirdModel:
     """Longitudinal flight dynamics of a flapping bird, state x = [u, w, q, theta].
 
-    Couples the wing kinematics (``Wing``: joints, frequency, morphology)
-    with the lifting-line aerodynamics. All parameters are read at call time,
-    so changing an attribute changes the model. Defaults reproduce upstream
-    multiflap (study_1 reference bird).
+    Couples the wing kinematics (``wing``) with the lifting-line
+    aerodynamics (``aerodynamics``) and the rigid-body equations
+    (``equations.py``). Implements the ``dynamics.model.ODEModel`` protocol.
+    Defaults reproduce upstream multiflap (study_1 reference bird).
 
-    Attributes
+    Parameters
     ----------
-    g : float
-        Gravitational acceleration [m/s^2].
+    wing : kinematics.wing.Wing, optional
+        Gait and morphology of the wings (default: ``Wing()``).
+    aerodynamics : aerodynamics.config.AerodynamicsConfig, optional
+        Air properties and lifting-line settings (default: upstream values).
     mass : float
         Body mass [kg].
+    g : float
+        Gravitational acceleration [m/s^2].
     inertia_yy : float
         Pitch moment of inertia [kg m^2] (hard-coded 0.1 upstream).
-    wingframe_position, wingframe_position_tail : (3,) arrays
+    wing_position, tail_position : (3,) array_like
         Wing and tail frame origins relative to the centre of mass, in the
         wing frame (x spanwise, y up, z backward) [m].
-    tail_length, tail_opening : float
-        Tail length [m] and opening angle [rad] (0: no tail).
-    tail_chord : float
-        Unused (as upstream).
-    rho, cl_alpha, kin_viscosity, tail_reference_velocity : float
-        Air density [kg/m^3], lift-curve slope [1/rad], kinematic viscosity
-        [m^2/s], velocity of the tail Reynolds number [m/s].
-    circulation_tol, circulation_max_iterations : float, int
-        Convergence settings of the lifting-line circulation iteration.
+    tail_length : float
+        Tail length [m].
+    tail_opening : float
+        Tail opening angle [rad] (0: no tail surface).
     stability_fd_step : float
-        Relative step of the finite differences in ``get_stability_matrix``.
+        Relative finite-difference step of ``jacobian``.
 
-    Keyword arguments other than the joints are passed to ``Wing``
-    (``frequency``, bone and feather geometry, ``body_half_width``,
-    ``kinematic_dt``).
+    All parameters are attributes read at call time: changing one changes
+    the model.
     """
 
-    def __init__(self, shoulder=None, elbow=None, wrist=None, **wing_parameters):
+    dimension = 4
 
-        #Parameters:
-        self.dimension = 4
-        self.dimensions = 4  # upstream name
-        self.g = 9.81
-        self.mass = 1.2
-        self.inertia_yy = 0.1
-        self.stability_fd_step = 1e-3
-        self.wingframe_position = np.array([0, -0.0, -0.05])
-        self.wingframe_position_tail = np.array([0, -0., .3])
-        self.tail_length = 0.25
-        self.tail_chord = 0.15
-        self.tail_opening = 0.
-        self.rho = 1.225  # air density [kg/m^3]
-        self.cl_alpha = 2*np.pi
-        self.kin_viscosity = 1.5e-5
-        self.tail_reference_velocity = 15
-        self.circulation_tol = 0.001
-        self.circulation_max_iterations = 50
-        super().__init__(shoulder=shoulder, elbow=elbow, wrist=wrist,
-                         **wing_parameters)
+    def __init__(self, wing=None, aerodynamics=None, *, mass=1.2, g=9.81, inertia_yy=0.1,
+                 wing_position=(0, -0.0, -0.05), tail_position=(0, -0., .3),
+                 tail_length=0.25, tail_opening=0., stability_fd_step=1e-3):
+        self.wing = wing if wing is not None else Wing()
+        self.aerodynamics = aerodynamics if aerodynamics is not None else AerodynamicsConfig()
+        self.mass = mass
+        self.g = g
+        self.inertia_yy = inertia_yy
+        self.wing_position = np.array(wing_position, dtype=float)
+        self.tail_position = np.array(tail_position, dtype=float)
+        self.tail_length = tail_length
+        self.tail_opening = tail_opening
+        self.stability_fd_step = stability_fd_step
 
-    # calling methods of BirdModel that are defined in other files
-    get_aeroforces = get_aeroforces
-    dynamics = dynamics
-    get_stability_matrix = get_stability_matrix
-    jacobian = get_stability_matrix
-#bird_shoulder = Shoulder(axis_x=Joint(0.2,0.014,-np.pi/2), 
-#                         axis_y=Joint(-np.deg2rad(19),np.pi/12,np.pi/2), 
-#                         axis_z=Joint(0,np.deg2rad(42),np.pi))
-#bird_elbow = Elbow(axis_x=Joint(0.,np.pi/6,-np.pi/2), 
-#                   axis_y=Joint(np.pi/6,np.pi/6,-np.pi/2))
-#
-#bird_wrist = Wrist(axis_y=Joint(-np.pi/6,np.pi/6,np.pi/2), 
-#                   axis_z=Joint(0.,0.,0.))
-#
-#mybird = BirdModel(shoulder=bird_shoulder, elbow=bird_elbow, wrist=bird_wrist)
+    def forces(self, x, t):
+        """``AeroForces`` (wing and tail) for the state x at time t."""
+        return aerodynamic_forces(self.wing, x, t, self.aerodynamics,
+                                  wing_position=self.wing_position,
+                                  tail_position=self.tail_position,
+                                  tail_length=self.tail_length,
+                                  tail_opening=self.tail_opening)
+
+    def dynamics(self, x, t):
+        """Time derivative of the state x = [u, w, q, theta] at time t."""
+        return longitudinal_rhs(x, self.forces(x, t), self.mass, self.g, self.inertia_yy)
+
+    def jacobian(self, x, t):
+        """Finite-difference Jacobian of ``dynamics`` with respect to x."""
+        return stability_matrix(x, t, self.forces, self.mass, self.g, self.inertia_yy,
+                                self.stability_fd_step)
+
+    get_stability_matrix = jacobian   # upstream name (model protocol alias)

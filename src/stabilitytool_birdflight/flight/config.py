@@ -15,6 +15,7 @@ Example::
 """
 from __future__ import annotations
 
+import dataclasses
 import math
 from dataclasses import dataclass, field
 
@@ -110,25 +111,14 @@ class BirdCaseConfig:
 
     # -- model and solve ---------------------------------------------------
     def build_model(self):
-        """The ``BirdModel`` described by this case."""
+        """The ``BirdModel`` described by this case (angles converted to radians)."""
         from .bird import BirdModel
         k, a, f = self.kinematics, self.aerodynamics, self.flight
-        bird = BirdModel(**k.joints(), **k.wing_parameters())
-        bird.mass = f.mass
-        bird.g = f.g
-        bird.inertia_yy = f.inertia_yy
-        bird.stability_fd_step = f.stability_fd_step
-        bird.wingframe_position = np.array(f.wing_position)
-        bird.wingframe_position_tail = np.array(f.tail.position)
-        bird.tail_length = f.tail.length
-        bird.tail_opening = np.deg2rad(f.tail.opening)
-        bird.rho = a.rho
-        bird.cl_alpha = a.cl_alpha
-        bird.kin_viscosity = a.kin_viscosity
-        bird.tail_reference_velocity = a.tail_reference_velocity
-        bird.circulation_tol = a.circulation_tol
-        bird.circulation_max_iterations = a.circulation_max_iterations
-        return bird
+        return BirdModel(k.build(), dataclasses.replace(a),
+                         mass=f.mass, g=f.g, inertia_yy=f.inertia_yy,
+                         wing_position=f.wing_position, tail_position=f.tail.position,
+                         tail_length=f.tail.length, tail_opening=np.deg2rad(f.tail.opening),
+                         stability_fd_step=f.stability_fd_step)
 
     def solve(self, verbose=False, log_stream=None):
         """Find the limit cycle; returns a ``dynamics.result.LimitCycleResult``."""

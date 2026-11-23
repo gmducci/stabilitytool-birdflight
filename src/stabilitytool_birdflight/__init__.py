@@ -23,7 +23,6 @@ _LAZY = {
     "UnknownPeriodShooting": ".dynamics.shooting",
     "levenberg_marquardt": ".dynamics.solver",
     "ConvergenceError": ".dynamics.solver",
-    "SaveData": ".utilities.save_data",
     "RedoxModel": ".dynamics.systems.redox",
     "Rossler": ".dynamics.systems.rossler",
     "Lorenz": ".dynamics.systems.lorenz",

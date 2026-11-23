@@ -5,7 +5,7 @@ Evaluates, for the upstream code (tag ``upstream-v1.1``, extracted with
 ``git archive``) and for the package ``stabilitytool_birdflight``, at the same
 states and times:
 
-* ``get_aeroforces(x, t)`` (all nine outputs),
+* ``get_aeroforces(x, t)`` upstream, ``forces(x, t)`` in the package (all nine outputs),
 * ``dynamics(x, t)``,
 * ``get_stability_matrix(x, t)``,
 
@@ -85,10 +85,19 @@ def apply_upstream_variant(params):
     bird.omega = params.get("frequency", 4)*2*np.pi
 
 
+# upstream setting name -> (owner, attribute) in the package BirdModel
+PACKAGE_NAMES = {"wingframe_position": ("bird", "wing_position"),
+                 "wingframe_position_tail": ("bird", "tail_position"),
+                 "tail_opening": ("bird", "tail_opening"),
+                 "tail_length": ("bird", "tail_length"),
+                 "frequency": ("wing", "frequency")}
+
+
 def apply_package_variant(birds, params):
     for b in birds.values():
         for k, v in params.items():
-            setattr(b, k, v)
+            owner, name = PACKAGE_NAMES[k]
+            setattr(b.wing if owner == "wing" else b, name, v)
 
 
 def upstream_birds(upstream_dir):
@@ -132,8 +141,9 @@ def evaluate(birds, pts):
     with contextlib.redirect_stdout(io.StringIO()):
         for amp, x, t in pts:
             b = birds[amp]
+            upstream = hasattr(b, "get_aeroforces")
             out.append(dict(
-                forces=np.array(b.get_aeroforces(x, t), float),
+                forces=np.array(b.get_aeroforces(x, t) if upstream else b.forces(x, t), float),
                 dynamics=np.asarray(b.dynamics(x, t), float),
                 stability=np.asarray(b.get_stability_matrix(x, t), float),
             ))

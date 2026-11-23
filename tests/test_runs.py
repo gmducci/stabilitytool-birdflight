@@ -1,4 +1,4 @@
-"""Run directories, provenance, CLI and SaveData.
+"""Run directories, provenance and CLI.
 
 The bird solve takes minutes, so these tests replace ``BirdCaseConfig.solve``
 with a fast Rossler solve; the real end-to-end bird run is in
@@ -19,7 +19,6 @@ from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
 from stabilitytool_birdflight.flight.config import BirdCaseConfig
 from stabilitytool_birdflight.provenance import collect_provenance, sha256_file
 from stabilitytool_birdflight.runs import run_bird_case
-from stabilitytool_birdflight.utilities.save_data import SaveData
 
 CASE = Path(__file__).resolve().parents[1] / "examples" / "configs" / "bird_main.yaml"
 
@@ -119,25 +118,3 @@ def test_cli_validate_rejects_bad_file(tmp_path, capsys):
 def test_provenance_without_input():
     prov = collect_provenance()
     assert "input" not in prov and prov["package"]["name"] == "stabilitytool-birdflight"
-
-
-def test_savedata_explicit_folder(tmp_path):
-    from stabilitytool_birdflight.flight.bird import BirdModel
-    from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
-    with pytest.raises(TypeError):
-        SaveData("sim")                       # no hidden default folder any more
-    sd = SaveData("sim", tmp_path / "a" / "b")
-    sd.make_folder()
-    sd.save_data("multipliers_LC", np.array([1.0, 2.0]))
-    assert (tmp_path / "a" / "b" / "sim" / "floquet_multipliers.npy").exists()
-    bird = BirdModel(shoulder=Shoulder(Joint(0, 0, 0), Joint(0, 0, 0), Joint(0, 0, 0)),
-                     elbow=Elbow(Joint(0, 0, 0), Joint(0, 0, 0)),
-                     wrist=Wrist(axis_y=Joint(np.deg2rad(-30), np.deg2rad(30), np.deg2rad(90)),
-                                 axis_z=Joint(0, 0, 0)))
-    sd.write_simulation_settings(bird)
-    text = (tmp_path / "a" / "b" / "sim" / "simulation_settings.txt").read_text()
-    value = {m.group(1): float(m.group(2))
-             for m in re.finditer(r"^(\w+ wrist y): (\S+)$", text, re.M)}
-    # upstream wrote the amplitude (30) on the offset and phase lines
-    assert value == pytest.approx({"Amplitude wrist y": 30.0,
-                                   "Offset wrist y": -30.0, "Phase wrist y": 90.0})

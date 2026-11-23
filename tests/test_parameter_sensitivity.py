@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from stabilitytool_birdflight.flight.bird import BirdModel
+from stabilitytool_birdflight.kinematics.wing import Wing
 from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
 
 # A state near the study_1 limit cycle, with q != 0 so that angular-velocity
@@ -20,28 +21,39 @@ T = 0.05
 OPEN_TAIL = dict(tail_opening=np.deg2rad(30))
 
 
+WING_PARAMETERS = {"frequency", "arm_length", "forearm_length", "hand_length",
+                   "feather_lengths", "feather_spread_angles", "feather_pitch_angles",
+                   "body_half_width", "kinematic_dt"}
+AERO_PARAMETERS = {"rho", "cl_alpha", "kin_viscosity", "tail_reference_velocity",
+                   "circulation_tol", "circulation_max_iterations"}
+
+
 def make_bird(**attrs):
+    """Study_1 bird; each parameter set on the object that owns it."""
     d = np.deg2rad
-    bird = BirdModel(
+    bird = BirdModel(Wing(
         shoulder=Shoulder(axis_x=Joint(0.2, 0.014, -np.pi / 2),
                           axis_y=Joint(-d(19), d(20), np.pi / 2),
                           axis_z=Joint(0, d(42), np.pi)),
         elbow=Elbow(axis_x=Joint(0., np.pi / 6, -np.pi / 2),
                     axis_y=Joint(np.pi / 6, np.pi / 6, -np.pi / 2)),
         wrist=Wrist(axis_y=Joint(-np.pi / 6, np.pi / 6, np.pi / 2),
-                    axis_z=Joint(0., 0., 0.)))
+                    axis_z=Joint(0., 0., 0.))))
     for k, v in attrs.items():
-        setattr(bird, k, v)
+        owner = (bird.wing if k in WING_PARAMETERS else
+                 bird.aerodynamics if k in AERO_PARAMETERS else bird)
+        assert hasattr(owner, k), k
+        setattr(owner, k, v)
     return bird
 
 
 def output(bird, kind):
     with contextlib.redirect_stdout(io.StringIO()):
         if kind == "forces":
-            return np.array(bird.get_aeroforces(X, T), float)
+            return np.array(bird.forces(X, T), float)
         if kind == "dynamics":
             return np.asarray(bird.dynamics(X, T), float)
-        return np.asarray(bird.get_stability_matrix(X, T), float)
+        return np.asarray(bird.jacobian(X, T), float)
 
 
 # (parameter, new value, attributes of the reference bird, affected output)
@@ -50,7 +62,7 @@ CASES = [
     ("g", 9.7, {}, "dynamics"),
     ("inertia_yy", 0.12, {}, "dynamics"),
     ("rho", 1.1, {}, "forces"),
-    ("wingframe_position", np.array([0., 0., -0.08]), {}, "forces"),
+    ("wing_position", np.array([0., 0., -0.08]), {}, "forces"),
     ("frequency", 4.5, {}, "forces"),
     ("arm_length", 0.14, {}, "forces"),
     ("forearm_length", 0.17, {}, "forces"),
@@ -65,7 +77,7 @@ CASES = [
     ("kinematic_dt", 1e-4, {}, "forces"),
     ("tail_opening", np.deg2rad(30), {}, "forces"),
     ("tail_length", 0.3, OPEN_TAIL, "forces"),
-    ("wingframe_position_tail", np.array([0., 0., 0.35]), OPEN_TAIL, "forces"),
+    ("tail_position", np.array([0., 0., 0.35]), OPEN_TAIL, "forces"),
     ("stability_fd_step", 1e-4, {}, "stability"),
 ]
 
@@ -86,5 +98,5 @@ def test_tail_parameters_have_no_effect_when_tail_closed():
 
 
 def test_wing_parameters_can_be_passed_to_constructor():
-    bird = BirdModel(frequency=5, arm_length=0.14)
-    assert bird.frequency == 5 and bird.arm_length == 0.14
+    bird = BirdModel(Wing(frequency=5, arm_length=0.14))
+    assert bird.wing.frequency == 5 and bird.wing.arm_length == 0.14
