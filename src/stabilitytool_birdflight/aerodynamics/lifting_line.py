@@ -23,8 +23,45 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from .circulation import circulation, inucedvel_filament, inducedvel_segment
+from .vortex import inucedvel_filament, inducedvel_segment
 from .tail import delta_tail, tail_geometry
+
+
+def circulation(y,z,yc,zc,chord,angle_of_attack,cl_alpha,velocity_module,gamma):
+
+    gamma_new = np.zeros_like(gamma)
+    vs = np.zeros([3,np.size(gamma)])
+    relfac = 0.1
+
+    gamma_filament = np.c_[gamma[:,0], gamma[:,1:] - gamma[0:,:-1], -gamma[0,-1]]
+
+    dz = z[1:] - z[0:-1]
+    dy = y[1:] - y[0:-1]
+    ds = np.sqrt((dy**2)+(dz**2))
+    dz = dz/ds
+    dy = dy/ds
+    down = np.array([dz,-dy,np.zeros_like(dy)])
+
+    n = np.size(yc)
+
+    for i in range(n):
+        v = np.array([[0],[0],[0]])
+
+        for j in range(n+1):
+
+            dy_1 = yc[i] - y[j]
+            dz_1 = zc[i] - z[j]
+
+            v = v + gamma_filament[0,j]*np.array([[dz_1],[-dy_1],[0]])/(dy_1**2 + dz_1**2)
+
+        v = (v/(4*np.pi))
+        vdown = np.sum(v[:,0]*down[:,i])
+        gamma_new[0,i] = 0.5*velocity_module[i]*chord[i]*cl_alpha*(angle_of_attack[i] - vdown/velocity_module[i])
+        vs[:,i] = v[:,0]
+
+    gamma_new = relfac*gamma_new + (1-relfac)*gamma
+
+    return gamma_new, vs
 
 
 def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,

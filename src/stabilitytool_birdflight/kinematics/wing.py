@@ -27,8 +27,7 @@ limitations under the License.
 import numpy as np
 from .joints import Joint, Shoulder, Elbow, Wrist
 from .lines import smooth_line, smooth_quarterline, quarterchord_naive, improveline_iteration
-from .rotations import RotationMatrix
-from .CompMatrix import CompMatrix
+from .rotations import RotationMatrix, CompMatrix
 from .feathers import (plumes, DEFAULT_FEATHER_LENGTHS, DEFAULT_FEATHER_SPREAD_ANGLES,
                      DEFAULT_FEATHER_PITCH_ANGLES)
 
