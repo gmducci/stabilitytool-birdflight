@@ -7,8 +7,8 @@ import pytest
 from stabilitytool_birdflight.dynamics.config import SolverConfig
 from stabilitytool_birdflight.dynamics.model import ODEModel, get_dimension, get_jacobian
 from stabilitytool_birdflight.dynamics.result import LimitCycleResult
-from stabilitytool_birdflight.dynamics.systems.forced_vdp import ForcedVanDerPol
-from stabilitytool_birdflight.dynamics.systems.redox_oscillation import RedoxModel
+from stabilitytool_birdflight.dynamics.systems.van_der_pol import ForcedVanDerPol
+from stabilitytool_birdflight.dynamics.systems.redox import RedoxModel
 from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
 from stabilitytool_birdflight.flight.bird_model import BirdModel
 

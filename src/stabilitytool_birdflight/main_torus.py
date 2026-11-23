@@ -1,7 +1,7 @@
 # Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 from stabilitytool_birdflight.dynamics.systems.torus import Torus
-from stabilitytool_birdflight.dynamics.rk_integrator import rk4
+from stabilitytool_birdflight.dynamics.integrators import rk4
 from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 import matplotlib.pyplot as plt
 from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod

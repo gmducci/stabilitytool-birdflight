@@ -1,7 +1,8 @@
 '''
-file forced_vdp.py
+file lorenz.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
+Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 
 multiflap is a Python tool for finding periodic orbits and assess their stability via the Floquet multipliers.
 
@@ -23,27 +24,15 @@ limitations under the License.
 '''
 import numpy as np
 
-"""
-Example case adopted from:
 
-    Practical Bifurcation and Stability Analysis, page 347
-    Seydel R.
-    Forced Van der Pol oscillator
+class Lorentz:
+    def __init__(self, sigma=None, r=None, b=None):
 
+        self.sigma = sigma
+        self.r = r
+        self.b = b
+        self.dimension = 3
 
-    gamma = 0.5 ; lambda = 1.8
-    p:q = 1:3 (from Seydel results). Meaning the period T=10.4719755
-
-    This example does not use on purpose the stability matrix, in order to
-    calculate the Jacoian numerically only.
-"""
-
-class ForcedVanDerPol:
-    def __init__(self, lam=1.8 , gamma = 0.5, delta=4):
-        self.lam = lam
-        self.gamma = gamma
-        self.delta = delta
-        self.dimension=2
     def dynamics(self, x0, t):
 
         """ODE system
@@ -56,9 +45,27 @@ class ForcedVanDerPol:
         Outputs:
             x_dot: velocity vector
         """
-        y1, y2 = x0
-        dy1_dt = y2
-        dy2_dt = self.delta*(1 - y1**2)*y2 -y1 + self.gamma*(np.cos(self.lam*t))
-
-        vel_array = np.array([dy1_dt, dy2_dt], float)
+        x, y, z = x0
+        dxdt = self.sigma*(y-x)
+        dydt = x*(self.r-z)-y
+        dzdt = x*y - self.b*z
+        vel_array = np.array([dxdt, dydt, dzdt], float)
         return vel_array
+
+    def get_stability_matrix(self, x0, t):
+
+        """
+        Stability matrix of the ODE system
+
+        Inputs:
+            x0: initial condition
+        Outputs:
+            A: Stability matrix evaluated at x0. (dxd) dimension
+            A[i, j] = dv[i]/dx[j]
+        """
+        x, y, z = x0
+        A_matrix = np.array([[-self.sigma,  self.sigma, 0],
+                            [(self.r-z), -1, -x],
+                            [y, x, -self.b]], float)
+
+        return A_matrix

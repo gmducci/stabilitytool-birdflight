@@ -23,8 +23,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np
-from stabilitytool_birdflight.dynamics.systems.lorentz import Lorentz
-from stabilitytool_birdflight.dynamics.lyapunov_exponents import LyapunovExponents
+from stabilitytool_birdflight.dynamics.systems.lorenz import Lorentz
+from stabilitytool_birdflight.dynamics.lyapunov import LyapunovExponents
 from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 from stabilitytool_birdflight.dynamics.lma_solver_period import SolverPeriod
 import matplotlib.pyplot as plt

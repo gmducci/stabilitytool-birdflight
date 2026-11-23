@@ -6,8 +6,8 @@ from hopf import Hopf
 from stabilitytool_birdflight.dynamics.model import get_jacobian
 from stabilitytool_birdflight.dynamics.systems.goodwin_model import GoodwinModel
 from stabilitytool_birdflight.dynamics.systems.isothermal_reaction import IsothermalReaction
-from stabilitytool_birdflight.dynamics.systems.lorentz import Lorentz
-from stabilitytool_birdflight.dynamics.systems.redox_oscillation import RedoxModel
+from stabilitytool_birdflight.dynamics.systems.lorenz import Lorentz
+from stabilitytool_birdflight.dynamics.systems.redox import RedoxModel
 from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
 from stabilitytool_birdflight.dynamics.systems.torus import Torus
 

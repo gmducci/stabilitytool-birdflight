@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from hopf import Hopf
-from stabilitytool_birdflight.dynamics.rk_integrator import rk2, rk3, rk4
+from stabilitytool_birdflight.dynamics.integrators import rk2, rk3, rk4
 
 
 @pytest.mark.parametrize("integrator,order", [(rk2, 2), (rk3, 3), (rk4, 4)],

@@ -24,7 +24,7 @@ limitations under the License.
 '''
 import numpy as np
 from stabilitytool_birdflight.dynamics.systems.goodwin_model import GoodwinModel
-from stabilitytool_birdflight.dynamics.rk_integrator import rk4
+from stabilitytool_birdflight.dynamics.integrators import rk4
 from stabilitytool_birdflight.dynamics.multiple_shooting_period import MultipleShootingPeriod
 from matplotlib.ticker import FormatStrFormatter
 from scipy.integrate import odeint

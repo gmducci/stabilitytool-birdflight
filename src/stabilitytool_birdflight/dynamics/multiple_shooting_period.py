@@ -1,6 +1,6 @@
 # Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
-from .rk_integrator import rk2, rk3, rk4
+from .integrators import rk2, rk3, rk4
 from .model import get_dimension, get_jacobian
 import time
 import collections
