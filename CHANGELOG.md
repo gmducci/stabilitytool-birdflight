@@ -7,9 +7,9 @@ in `baseline/` (see `baseline/README.md`).
 
 ## Changes to numerical results
 
-With default parameters no code change has altered results: all stages
-reproduce the Stage 1 baseline bitwise (relative difference 0) on numpy
-1.26.4.
+With default parameters no code change has altered results: all stages,
+including the Stage 7 restructuring, reproduce the Stage 1 baseline bitwise
+(relative difference 0) on numpy 1.26.4.
 
 **Stage 3: parameters that upstream silently ignored now take effect.** In
 upstream multiflap these `BirdModel` attributes were never read; the code used
@@ -62,6 +62,73 @@ regression tolerance was relaxed from 1e-8 to 1e-6 accordingly; see
   trees changed; the baseline tools use `upstream-v1.1` as before.
 - Author, committer and tagger email changed to a GitHub noreply address.
 - All commit hashes and tags changed accordingly (same messages and dates).
+
+### Stage 7: internal restructuring
+
+Plan and decisions: `plans/stage7-restructuring.md`. No numerical change:
+`baseline/compare_rhs.py` is bitwise identical after every commit, and the
+six baseline cases (three toy systems, three bird cases) are bitwise
+identical to the package before Stage 7 (`baseline/runs/pre_s7`).
+
+**Breaking: the API changed and there are no compatibility aliases**
+(decision D1). Old and new names:
+
+| Before | After |
+|---|---|
+| `dynamics/multiple_shooting.py`: `MultipleShooting(x0, M, period, t_steps, model, option_jacobian)` | `dynamics/shooting.py`: `KnownPeriodShooting(model, x0, points, period, t_steps, jacobian)` |
+| `dynamics/multiple_shooting_period.py`: `MultipleShootingPeriod(..., period_guess, integrator)` | `UnknownPeriodShooting(model, x0, points, period_guess, t_steps, jacobian, integrator)` |
+| `get_mappedpoint`, `get_initial_guess`, `get_error_vector`, `get_ms_scheme`, `jacobian_ode`, `get_jacobian_analytical`, `get_jacobian_numerical` | `mapped_point`, `initial_guess`, `error_vector`, `scheme` (always `(x, tau)`), `variational_rhs`, `interval_jacobian_analytical`, `interval_jacobian_numerical` |
+| `dynamics/lma_solver.py`, `lma_solver_period.py`: `Solver(...).lma()`, `SolverPeriod(...).lma()` | `dynamics/solver.py`: `levenberg_marquardt(shooting, tolerance, max_iterations)` → `ShootingSolution` |
+| `SolverConfig.build(model)`, `SolverConfig.solve(model)` | `dynamics/limit_cycle.py`: `make_shooting(model, config)`, `find_limit_cycle(model, config)` |
+| `RuntimeError` / `UnboundLocalError` when not converged | `ConvergenceError` (a `RuntimeError`) |
+| `dynamics/lyapunov_exponents.py`: `LyapunovExponents(x0, n, t_f, model).get_lyapunov_exponent()` | `dynamics/lyapunov.py`: `largest_lyapunov_exponent(model, x0, n, t_f)` |
+| `dynamics/rk_integrator.py` | `dynamics/integrators.py` |
+| `systems/lorentz.py`: `Lorentz`; `systems/forced_vdp.py`; `systems/redox_oscillation.py` | `systems/lorenz.py`: `Lorenz`; `systems/van_der_pol.py`; `systems/redox.py` |
+| `kinematics/bird.py`; `Joint.motion_joint(t, f)` | `kinematics/joints.py`; `Joint.angle(t, f)` |
+| `kinematics/wing.py`: `BirdWing` | `Wing` |
+| `get_wingstate(t)` (list in the order x, z, y, ...) | `Wing.joint_angles(t)` → `JointAngles` (named fields) |
+| `get_wingenvelope(state)` | `Wing.edges(t)`; `kinematics/envelope.py`: `wing_edges(angles, ...)` |
+| `get_liftingline`, `merge_lines` (methods) | `kinematics/lines.py`: `quarter_chord_line`, `merge_left_right(package, body_half_width)` |
+| `get_lifting_line_kinematics(t)` → 5-tuple | `Wing.geometry(t)` → `WingGeometry(line, chord_dir, up_dir, chord, velocity)`; `Wing.lifting_line(t)` |
+| `get_kinematicvelocity` | `lines.centre_point_velocity` |
+| `RotationMatrix.py`, `CompMatrix.py` | `kinematics/rotations.py`: `rotation_matrix`, `scaling_matrix` |
+| `Plumes.py`: `plumes` | `kinematics/feathers.py`: `feather_geometry` |
+| `line_functions.py`, `distances_functions.py` | `kinematics/lines.py` (`quarter_chord_naive`, `smooth_quarter_chord_line`, `refine_line`, `distance_point_line`, `distance_line_line`) |
+| `aerodynamics/flapping_forces.py`: `get_flappingforces(freestream, omega, v_kin, line, chordir, updir, chord, ...)` → 9-tuple | `aerodynamics/lifting_line.py`: `lifting_line_forces(geometry, freestream, omega, ...)` → `AeroForces` (named fields) |
+| `circulation.py`: `circulation`, `inucedvel_filament`, `inducedvel_segment` | `lifting_line.solve_circulation`; `aerodynamics/vortex.py`: `induced_velocity_filament`, `induced_velocity_segment` |
+| `TailModels.py`: `delta_tail` | `aerodynamics/tail.py`: `tail_force` |
+| `flight/bird_model.py`: `BirdModel(shoulder, elbow, wrist, **wing_parameters)`, a subclass of the wing | `flight/bird.py`: `BirdModel(wing, aerodynamics, *, mass, g, inertia_yy, wing_position, tail_position, tail_length, tail_opening, stability_fd_step)`, which holds a `Wing` |
+| `BirdModel.wingframe_position`, `.wingframe_position_tail`, `.rho`, `.frequency`, ... | `.wing_position`, `.tail_position`, `.aerodynamics.rho`, `.wing.frequency`, ... |
+| `BirdModel.get_aeroforces(x, t)` → list | `BirdModel.forces(x, t)` → `AeroForces` |
+| `flight/bird_dynamics.py` (functions taking `self`) | `flight/equations.py`: `longitudinal_rhs`, `stability_matrix`; `flight/forces.py`: `aerodynamic_forces` |
+| `utilities/save_data.py`: `SaveData` | removed (decision D3; use `runs.py` / the CLI) |
+| `main.py`, `*_main.py` in the package; `examples/*_system.py` | `examples/` (see `examples/README.md`) |
+
+Kept: the model protocol (`dimension`, `dynamics(x, t)`, `jacobian(x, t)`,
+`get_stability_matrix` alias), the config file format, and run directories.
+
+Other changes:
+- Removed: `ms_package/` (copy of `bird_dynamics.py`), `integrator_2.py`,
+  `MergeLines.py`, `tail_postprcessing.py`, `polar.py` and `polar.txt`
+  (commented out), `circulation_polar` (called an undefined function),
+  the unused `WingState` namedtuple, `utils/` and `visualisation/` (moved to
+  `examples/plotting/`).
+- Toy systems: Rössler, redox, forced Van der Pol and Lorenz stay in
+  `dynamics/systems/`; Goodwin, isothermal reaction, torus, Lotka–Volterra
+  (`lotka` → `LotkaVolterra`) and Jaschinski move to `examples/systems/`
+  (decision D4).
+- Values hard-coded differently in the two upstream shooting classes are now
+  arguments with the upstream defaults: `variational_steps` (30 known
+  period, 500 unknown period) and `fd_epsilon` (1e-3, 1e-5). Likewise for
+  `largest_lyapunov_exponent` (transient, perturbation, points per segment).
+- Solver progress goes to `logging` (logger `stabilitytool_birdflight`)
+  instead of `print`; `find_limit_cycle(..., verbose=True)` or `log_stream=`
+  shows it, and run directories still get it in `solver.log`.
+- New tests: examples (`tests/test_examples.py`), Lorenz Lyapunov exponent
+  against the upstream value.
+- Upstream behaviour documented, unchanged: the Levenberg–Marquardt solver
+  updates the shooting points even when a step is rejected (only the
+  damping, and for an unknown period the period, react to the rejection).
 
 ### Stage 6: tests and continuous integration
 

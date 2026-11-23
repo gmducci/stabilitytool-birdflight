@@ -1,7 +1,8 @@
 # Stage 7 plan: internal restructuring
 
-Status: **approved 2026-11-23**; the user accepted the recommended answer to
-every decision in Section 6.
+Status: **done 2026-11-23** (tag `stage7-restructuring`); the user accepted
+the recommended answer to every decision in Section 6. Deviations from the
+plan: Section 7.
 
 ## 1. Why
 
@@ -250,3 +251,25 @@ Ground rule 3: moves and logic changes never share a commit.
 - **D5. Stage numbering.** This becomes Stage 7. The current Stage 7 (logging,
   type hints, docstrings, docs, `CITATION.cff`) becomes Stage 8, minus the
   duplicate removal and `print` → `logging` work done here.
+
+## 7. Outcome and deviations from the plan
+
+- Done as planned: steps A to F; every commit bitwise identical on
+  `compare_rhs.py`; the six baseline cases bitwise identical to the package
+  before Stage 7. The final names are in `CHANGELOG.md` (Stage 7).
+- `BodyForces` was not introduced: the bird's forces are exactly the
+  aerodynamic forces, so `BirdModel.forces` returns `AeroForces`.
+- `improveline_new` is not dead code (`refine_line` calls it): kept as
+  `lines._refine_line_step`.
+- `Wing` methods: `joint_angles(t)`, `edges(t)`, `lifting_line(t)`,
+  `geometry(t)`; the module-level `envelope.wing_edges` and
+  `lines.quarter_chord_line` / `merge_left_right` do the work.
+- `BirdModel` takes the existing `AerodynamicsConfig` as its aerodynamic
+  settings instead of a new parameter object.
+- `LimitCycleForces.py` was **not ported** (decision D3 said port it): it
+  unpacks 13 outputs from `get_aeroforces` (including tail drag, induced
+  power and profile force), but upstream v1.1 returns 9. It was written for
+  another multiflap version (probably the study_2 code) and never ran in
+  this repository. Left in `utilities/` pending the user's decision.
+- `examples/systems/jaschinski.py` does not parse (already upstream); kept
+  for reference, see `examples/README.md`.

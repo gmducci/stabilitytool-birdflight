@@ -20,26 +20,49 @@
 >   or from Python:
 >
 >   ```python
->   from stabilitytool_birdflight.flight.config import BirdCaseConfig
+>   from stabilitytool_birdflight import BirdCaseConfig
 >   case = BirdCaseConfig.load("examples/configs/bird_study1_reference.yaml")
 >   result = case.solve()          # about 15 min for this case
 >   print(result.summary())        # period, iterations, state, multipliers
 >   ```
 >
-> - modules: `kinematics` (wing gait and geometry), `aerodynamics` (lifting
->   line, tail), `dynamics` (multiple shooting, Floquet, Lyapunov), `flight`
->   (couples them); the first three are independent of each other;
+> - any model with `dimension`, `dynamics(x, t)` and `jacobian(x, t)`:
+>
+>   ```python
+>   from stabilitytool_birdflight import Rossler, SolverConfig, find_limit_cycle
+>   result = find_limit_cycle(Rossler(a=0.2, b=0.2, c=5.7),
+>                             SolverConfig(x0=(0.1, 5.0, 3.6), method="unknown_period",
+>                                          points=30, period_guess=5.0, t_steps=5000,
+>                                          integrator="odeint"))
+>   ```
+>
+> - modules (`src/stabilitytool_birdflight/`), the first three independent of
+>   each other:
+>   - `kinematics`: joints and gait (`joints.py`), skeleton and feathers,
+>     wing envelope and lifting line (`skeleton.py`, `envelope.py`,
+>     `lines.py`); `Wing.geometry(t)`;
+>   - `aerodynamics`: `lifting_line_forces` (`lifting_line.py`), vortex
+>     induced velocities (`vortex.py`), tail (`tail.py`);
+>   - `dynamics`: `find_limit_cycle` (`limit_cycle.py`), multiple shooting
+>     (`shooting.py`), Levenberg–Marquardt (`solver.py`), Lyapunov exponent,
+>     integrators, toy systems;
+>   - `flight`: `BirdModel` (a `Wing` plus body and tail), longitudinal
+>     equations (`equations.py`), forces for a flight state (`forces.py`),
+>     bird case configs;
+> - examples: `examples/README.md`;
 > - tests: `uv run pytest` (fast suite, seconds); `uv run pytest -m slow`
 >   (the three baseline bird cases end to end, about 15 min); continuous
 >   integration in `.github/workflows/tests.yml`;
-> - the scripts inside the package (`main.py`, `*_main.py`) run with
->   `python -m stabilitytool_birdflight.main` (to be replaced by examples);
 > - reference outputs and the regression check: `baseline/README.md`;
 > - changes: `CHANGELOG.md`.
 >
 > Modified by the stabilitytool-birdflight project, 2026.
 
 ## multiflap (upstream README)
+
+> The rest of this README is upstream's and describes the **multiflap v1.1
+> API** (`ms_package`, `MultipleShooting`, `Solver`, ...), which this fork
+> replaced in Stage 7: see the examples and `CHANGELOG.md` for the new names.
 
 [![Static](https://img.shields.io/badge/docs-latest-blue)][stable docs url]
 [![Static](https://img.shields.io/badge/multiflap-v1.1-brightgreen)][stable link url]

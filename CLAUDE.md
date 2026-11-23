@@ -299,6 +299,9 @@ commit order: `plans/stage7-restructuring.md`. Summary:
 - Moves and logic changes in separate commits. Target: bitwise-identical
   results (`baseline/compare_rhs.py`) at every step; stop and ask if not.
 - Decisions D1–D5 accepted on 2026-11-23 (see Section 6).
+- Done 2026-11-23 (tag `stage7-restructuring`); names before and after in
+  `CHANGELOG.md`, deviations in the plan (Section 7). Open: what to do with
+  `utilities/LimitCycleForces.py` (written for another multiflap version).
 
 ### Stage 8: cleanup, documentation and citation
 
@@ -371,4 +374,9 @@ The upstream code is Apache License 2.0 (see `LICENSE` and `NOTICE`). Therefore:
   (about 15 min); run it in the background.
 - Fast bird check after any change to the bird code:
   `baseline/compare_rhs.py` (about 10 s, bitwise vs upstream).
+- `baseline/runs/pre_s7/` (git-ignored) holds all six cases computed with the
+  package just before Stage 7; compare bitwise with
+  `compare_baseline.py DIR --ref baseline/runs/pre_s7 --rtol 0`.
+- Examples: `examples/README.md`; `tests/test_examples.py` runs the quick
+  ones. Models in `examples/systems/` are imported as `systems.<name>`.
   Regression check: `baseline/README.md`.

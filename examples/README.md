@@ -28,7 +28,7 @@ model interface (`dimension`, `dynamics(x, t)`, `jacobian` or
 | Model | Status |
 |---|---|
 | `goodwin.py`, `isothermal_reaction.py` | used by the examples above; analytical Jacobians tested |
-| `torus.py` | analytical Jacobian tested; no example (the upstream script never ran the solver) |
+| `torus.py` | `get_stability_matrix` unfinished upstream (returns `None`; strict `xfail` in the tests); no example (the upstream script never ran the solver) |
 | `lotka_volterra.py` | untested; the upstream script did not run |
 | `jaschinski.py` | **does not parse** (syntax errors already upstream); kept for reference |
 
