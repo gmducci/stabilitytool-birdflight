@@ -280,7 +280,27 @@ The user must be able to extract bird kinematics without flight mechanics.
 - GitHub Actions workflow running the fast suite on Linux for the supported
   Python versions. The slow suite on demand or nightly.
 
-### Stage 7: cleanup, documentation and citation
+### Stage 7: internal restructuring
+
+Added 2026-11-23. Stages 2–6 changed the wiring, but the code inside is still
+organised like upstream: upstream file and function names, duplicated
+solvers, dead code, scripts inside the package, `BirdModel` inheriting from
+the wing, results passed as lists unpacked by position. Full plan, rename table and
+commit order: `plans/stage7-restructuring.md`. Summary:
+
+- Rename files and functions to clear snake_case names, delete dead code
+  and duplicates, move scripts to `examples/`.
+- Merge the known- and unknown-period shooting and solver code; logging
+  instead of `print`; `ConvergenceError`; `find_limit_cycle(model, config)`
+  so configs only hold data.
+- Split the wing kinematics (skeleton, envelope, lines); named results
+  (`WingGeometry`, `AeroForces`, `BodyForces`); `BirdModel` composes a
+  `Wing` instead of inheriting from it.
+- Moves and logic changes in separate commits. Target: bitwise-identical
+  results (`baseline/compare_rhs.py`) at every step; stop and ask if not.
+- Decisions D1–D5 accepted on 2026-11-23 (see Section 6).
+
+### Stage 8: cleanup, documentation and citation
 
 - Remove duplicates and dead code (Section 4), after confirming with the user.
 - Logging instead of `print`, type hints, numpy-style docstrings.
@@ -308,10 +328,18 @@ Decided:
 - **Model interface** (Stage 4): keep the upstream names, formalised as a
   Protocol: `dimension`, `dynamics(x, t)`, `jacobian(x, t)`, with
   `get_stability_matrix` accepted as the upstream alias.
+- **Restructuring** (Stage 7, 2026-11-23), decisions D1–D5 of
+  `plans/stage7-restructuring.md`: no compatibility shims for old import
+  paths; new class and function names as in the plan's table; port
+  `LimitCycleForces` to `flight/postprocessing.py`, delete
+  `tail_postprcessing.py` and `SaveData`, move plotting and animation
+  scripts to `examples/plotting/`; keep Rössler, redox, forced Van der Pol
+  and Lorenz in `dynamics/systems/`, move the other toy systems to
+  `examples/systems/`; restructuring is Stage 7, cleanup is Stage 8.
 
 Still open:
 
-- Whether to keep `anim/` and the toy systems in the repository.
+- Whether to keep `anim/` in the repository.
 - Any change to numerical results, including bug fixes (ground rule 2).
 - Whether to report the silently-ignored-parameter issue upstream.
 
