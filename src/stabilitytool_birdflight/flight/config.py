@@ -111,7 +111,7 @@ class BirdCaseConfig:
     # -- model and solve ---------------------------------------------------
     def build_model(self):
         """The ``BirdModel`` described by this case."""
-        from .bird_model import BirdModel
+        from .bird import BirdModel
         k, a, f = self.kinematics, self.aerodynamics, self.flight
         bird = BirdModel(**k.joints(), **k.wing_parameters())
         bird.mass = f.mass

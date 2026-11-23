@@ -121,7 +121,7 @@ def test_provenance_without_input():
 
 
 def test_savedata_explicit_folder(tmp_path):
-    from stabilitytool_birdflight.flight.bird_model import BirdModel
+    from stabilitytool_birdflight.flight.bird import BirdModel
     from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
     with pytest.raises(TypeError):
         SaveData("sim")                       # no hidden default folder any more

@@ -10,7 +10,7 @@ from stabilitytool_birdflight.dynamics.result import LimitCycleResult
 from stabilitytool_birdflight.dynamics.systems.van_der_pol import ForcedVanDerPol
 from stabilitytool_birdflight.dynamics.systems.redox import RedoxModel
 from stabilitytool_birdflight.dynamics.systems.rossler import Rossler
-from stabilitytool_birdflight.flight.bird_model import BirdModel
+from stabilitytool_birdflight.flight.bird import BirdModel
 
 DATA = Path(__file__).resolve().parents[1] / "baseline" / "data"
 

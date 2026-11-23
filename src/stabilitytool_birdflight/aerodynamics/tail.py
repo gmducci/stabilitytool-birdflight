@@ -1,5 +1,5 @@
 '''
-file TailModels.py
+file tail.py
 @author Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
 Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.

@@ -8,7 +8,7 @@ import pytest
 import yaml
 
 from stabilitytool_birdflight.configio import ConfigError
-from stabilitytool_birdflight.flight.bird_model import BirdModel
+from stabilitytool_birdflight.flight.bird import BirdModel
 from stabilitytool_birdflight.flight.config import BirdCaseConfig
 from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
 

@@ -23,7 +23,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import numpy as np  # Import NumPy
-from ..aerodynamics.flapping_forces import get_flappingforces
+from ..aerodynamics.lifting_line import get_flappingforces
 import scipy.integrate as ode
 import time
 from math import sin, cos

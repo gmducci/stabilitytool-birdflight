@@ -10,7 +10,7 @@ import io
 import numpy as np
 import pytest
 
-from stabilitytool_birdflight.flight.bird_model import BirdModel
+from stabilitytool_birdflight.flight.bird import BirdModel
 from stabilitytool_birdflight.kinematics.joints import Elbow, Joint, Shoulder, Wrist
 
 # A state near the study_1 limit cycle, with q != 0 so that angular-velocity

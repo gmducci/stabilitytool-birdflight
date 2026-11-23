@@ -25,7 +25,7 @@ limitations under the License.
 import sys
 import numpy as np
 from stabilitytool_birdflight.dynamics.multiple_shooting import MultipleShooting
-from stabilitytool_birdflight.flight.bird_model import BirdModel
+from stabilitytool_birdflight.flight.bird import BirdModel
 from stabilitytool_birdflight.kinematics.joints import Shoulder, Elbow, Wrist, Joint
 import time
 from numpy.linalg import norm

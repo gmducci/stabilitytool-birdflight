@@ -1,5 +1,5 @@
 '''
-file flapping_forces.py
+file lifting_line.py
 @author Victor Colognesi, Gianmarco Ducci
 @copyright Copyright © UCLouvain 2020
 Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
@@ -24,7 +24,7 @@ limitations under the License.
 '''
 import numpy as np  # Import NumPy
 from .circulation import circulation, inucedvel_filament, inducedvel_segment
-from .TailModels import delta_tail, tail_geometry
+from .tail import delta_tail, tail_geometry
 
 
 def get_flappingforces(freestream, angular_velocity, v_kin, line, chordir,
