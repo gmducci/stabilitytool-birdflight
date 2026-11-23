@@ -1,6 +1,7 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 from scipy.integrate import odeint
-class lotka:
+class LotkaVolterra:
     def __init__(self, a=None, b=None, c=None, d=None, e=None, q=None, p=None):
 
         self.a = a

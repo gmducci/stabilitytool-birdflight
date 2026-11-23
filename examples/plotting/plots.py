@@ -1,3 +1,4 @@
+# Modified by the stabilitytool-birdflight project (fork of multiflap), 2026. See CHANGELOG.md.
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D

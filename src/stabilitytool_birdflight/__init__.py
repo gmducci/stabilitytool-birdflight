@@ -2,9 +2,8 @@
 """stabilitytool-birdflight: limit cycles, Floquet stability and bird flapping flight.
 
 Subpackages are independent: ``kinematics``, ``aerodynamics`` and ``dynamics``
-do not import each other; ``flight`` couples them. The names below (upstream
-multiflap API) are imported lazily, so importing one subpackage does not load
-the others.
+do not import each other; ``flight`` couples them. The names below are
+imported lazily, so importing one subpackage does not load the others.
 """
 from importlib import import_module as _import_module
 from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
@@ -31,6 +30,14 @@ _LAZY = {
     "rk3": ".dynamics.integrators",
     "rk4": ".dynamics.integrators",
     "largest_lyapunov_exponent": ".dynamics.lyapunov",
+    "Joint": ".kinematics.joints",
+    "Shoulder": ".kinematics.joints",
+    "Elbow": ".kinematics.joints",
+    "Wrist": ".kinematics.joints",
+    "Wing": ".kinematics.wing",
+    "lifting_line_forces": ".aerodynamics.lifting_line",
+    "BirdModel": ".flight.bird",
+    "BirdCaseConfig": ".flight.config",
 }
 
 __all__ = ["__version__", *_LAZY]
