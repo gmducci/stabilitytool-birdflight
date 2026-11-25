@@ -97,14 +97,24 @@ expected to move. Not yet checked: the full locus with qw,y re-trimmed.
 rotation term subtracted at N). qw,y is the published value (tuned for the
 `study2` model), not re-trimmed. Initial guess (14, −1.5, 0.1, 0.01).
 
-RESULTS_TABLE
+| Case | Variant | Iter. | u [m/s] | mean pitch [°] | W_ff [m/s] | \|Λ\| (largest first) | Published |
+|---|---|---|---|---|---|---|---|
+| (a) β 0°, ψ 10.5°, A 39.5°, qw,y 2.3° | `study2` | 6 | 13.02 | −0.17 | 0.678 | **1.3382**, 0.7586, 0.7586, 0.4145 | 14 m/s, Λ = 1.33 (unstable) |
+| (b) β 40°, ψ 14.5°, A 42°, qw,y −5.5° | `study2` | 5 | **14.00** | 1.18 | 0.346 | **0.9694**, 0.9694, 0.6059, 0.6059 | 14 m/s, pitch ≈ −0.2°, \|Λ\| ≈ 0.96 (stable) |
+| (b) | `study2_fixed` | 8 | 15.89 | −4.23 | −0.672 | 0.9564, 0.9564, 0.4040, 0.4040 | |
+| (c) β 40°, ψ 13.5°, A 44°, qw,y −9.67° | `study2` | 4 | **14.00** | 3.22 | 0.378 | **0.9673**, 0.9673, 0.6122, 0.6122 | 14 m/s, pitch ≈ 1.3°, \|Λ\| ≈ 0.96 (stable) |
+| (c) | `study2_fixed` | 10 | 18.17 | −8.79 | −2.367 | 0.9460, 0.9460, 0.3630, 0.3630 | |
 
-The published speed (14 m/s) is reproduced exactly with the study_2 code,
-and both open-tail cases are stable with the largest multipliers within 0.01
-of the published ≈ 0.96. That pair, 0.955 ± 0.166j in case (b), rotates by
+All runs: tolerance 5e-4 (as study_2), commit `8f01643`, clean tree (provenance in each `results/*.json`).
+
+The furled-tail case (a) gives Λ = 1.338 against the published 1.33 (at
+13.0 m/s instead of 14). Both open-tail cases reproduce the published speed
+(14.00 m/s) and are stable, with the largest multipliers within 0.01 of the
+published ≈ 0.96. That pair, 0.955 ± 0.166j in case (b), rotates by
 about 0.17 rad per wingbeat: an oscillation of about 9 s, the paper's
 "phugoidal mode, with period of about 8 s". Not exactly level
-(W_ff ≈ 0.35 m/s against < 5 mm/s) and pitch 1.4–1.9° higher than published:
+(W_ff 0.35–0.68 m/s against < 5 mm/s) and, in (b) and (c), pitch 1.4–1.9°
+higher than published:
 most likely the missing body drag, with which qw,y was tuned. With the fixed
 tail, the published qw,y no longer trims the bird (faster, nose down), so
 those runs show the direction of the change, not a level-flight comparison.

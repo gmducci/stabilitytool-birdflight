@@ -1,0 +1,214 @@
+{
+  "case": "c",
+  "variant": "study2_fixed",
+  "table1": {
+    "beta": 40.0,
+    "psi": 13.5,
+    "amplitude": 44.0,
+    "q_wy": -9.67,
+    "published": 0.96
+  },
+  "converged": true,
+  "iterations": 10,
+  "final_error": 0.0002560642648858913,
+  "state_at_t0": [
+    18.133694065587076,
+    -0.5409226271064475,
+    0.03622196618903055,
+    -0.1681277892867848
+  ],
+  "mean_u": 18.165491965146572,
+  "mean_pitch_deg": -8.792195633769015,
+  "W_ff": -2.3665167779161993,
+  "multipliers": [
+    [
+      0.9413539947269274,
+      0.09403503316134812
+    ],
+    [
+      0.9413539947269274,
+      -0.09403503316134812
+    ],
+    [
+      -0.25523792120248934,
+      0.25811518285949553
+    ],
+    [
+      -0.25523792120248934,
+      -0.25811518285949553
+    ]
+  ],
+  "moduli": [
+    0.9460390746951206,
+    0.9460390746951206,
+    0.3630011625909192,
+    0.3630011625909192
+  ],
+  "minutes": 4.902188118298849,
+  "case_config": {
+    "kinematics": {
+      "shoulder_x": [
+        11.459155902616464,
+        0.8021409131831525,
+        -90.0
+      ],
+      "shoulder_y": [
+        -13.5,
+        14.0,
+        90.0
+      ],
+      "shoulder_z": [
+        0.0,
+        44.0,
+        180.0
+      ],
+      "elbow_x": [
+        -9.67,
+        30.0,
+        -90.0
+      ],
+      "elbow_y": [
+        10.0,
+        10.0,
+        -90.0
+      ],
+      "wrist_y": [
+        -30.0,
+        30.0,
+        90.0
+      ],
+      "wrist_z": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "frequency": 4.0,
+      "arm_length": 0.134,
+      "forearm_length": 0.162,
+      "hand_length": 0.084,
+      "feather_lengths": [
+        0.25,
+        0.225,
+        0.2,
+        0.175,
+        0.15,
+        0.125,
+        0.1
+      ],
+      "feather_spread_angles": [
+        90.0,
+        67.5,
+        45.0,
+        22.5,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "feather_pitch_angles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "body_half_width": 0.05,
+      "kinematic_dt": 2.5e-05
+    },
+    "solver": {
+      "x0": [
+        14.0,
+        -1.5,
+        0.1,
+        0.01
+      ],
+      "method": "known_period",
+      "points": 2,
+      "period": 0.25,
+      "period_guess": null,
+      "t_steps": 90,
+      "integrator": "rk",
+      "jacobian": "analytical",
+      "tolerance": 0.0005,
+      "max_iterations": 40
+    },
+    "aerodynamics": {
+      "rho": 1.225,
+      "cl_alpha": 6.283185307179586,
+      "kin_viscosity": 1.5e-05,
+      "tail_reference_velocity": 15.0,
+      "circulation_tol": 0.005,
+      "circulation_max_iterations": 50
+    },
+    "flight": {
+      "mass": 1.2,
+      "g": 9.81,
+      "inertia_yy": 0.1,
+      "wing_position": [
+        0.0,
+        -0.0,
+        -0.05
+      ],
+      "tail": {
+        "length": 0.3,
+        "opening": 40.0,
+        "position": [
+          0.0,
+          -0.0,
+          0.3
+        ]
+      },
+      "stability_fd_step": 0.001
+    }
+  },
+  "provenance": {
+    "package": {
+      "name": "stabilitytool-birdflight",
+      "version": "0.1.0.dev0",
+      "location": "/Users/gianmarcoducci/PROJECT/PhD_FollowUp/src/stabilitytool_birdflight"
+    },
+    "git": {
+      "commit": "8f01643770f959e615a579f97a620714e9edb7da",
+      "describe": "stage7-restructuring-1-g8f01643",
+      "branch": "study2-reconstruction",
+      "dirty": false,
+      "uv_lock_sha256": "7e0c9346c58b59ce58b293aa34b13e09278273d26f545c5c5378b096b6c2b499"
+    },
+    "python": {
+      "version": "3.12.7 (main, Oct 12 2025, 22:59:05) [Clang 17.0.0 (clang-1700.0.13.5)]",
+      "implementation": "CPython",
+      "executable": "/Users/gianmarcoducci/PROJECT/PhD_FollowUp/.venv/bin/python3"
+    },
+    "dependencies": {
+      "numpy": "2.5.5",
+      "scipy": "1.18.1",
+      "matplotlib": "3.11.2",
+      "pyyaml": "6.0.3"
+    },
+    "blas": {
+      "name": "accelerate",
+      "version": "unknown"
+    },
+    "platform": {
+      "system": "Darwin",
+      "release": "25.6.0",
+      "machine": "arm64",
+      "processor": "arm"
+    },
+    "environment": {
+      "OPENBLAS_NUM_THREADS": null,
+      "OMP_NUM_THREADS": null,
+      "MKL_NUM_THREADS": null,
+      "VECLIB_MAXIMUM_THREADS": null,
+      "MPLBACKEND": null,
+      "PYTHONHASHSEED": null
+    },
+    "command": [
+      "studies/study2_tail/run_case.py",
+      "c",
+      "study2_fixed"
+    ],
+    "working_directory": "/Users/gianmarcoducci/PROJECT/PhD_FollowUp"
+  }
+}
